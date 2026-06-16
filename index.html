@@ -311,6 +311,16 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .fcd-max{font-family:var(--font-h);font-size:15px;font-weight:700;color:#ff9966}
 .fcd-min{font-family:var(--font-h);font-size:12px;color:#88bbff;margin-top:1px}
 .fcd-wind{text-align:right;font-size:9px;color:var(--text-dim);letter-spacing:.5px}
+
+/* ── SIDEBAR LINKS ──────────────────────────── */
+.sb-link{
+  display:block;padding:7px 9px;background:var(--panel2);
+  border:1px solid var(--border);border-radius:3px;
+  color:var(--amber);text-decoration:none;
+  font-size:10px;letter-spacing:1px;
+  transition:border-color .2s,color .2s;
+}
+.sb-link:hover{border-color:var(--amber-light);color:var(--amber-light)}
 </style>
 </head>
 <body>
@@ -399,6 +409,17 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <div id="fcdays">
         <div class="shim" style="height:54px;margin-bottom:6px"></div>
         <div class="shim" style="height:54px"></div>
+      </div>
+    </div>
+
+
+    <!-- FOTOLAPISSABLE LINKS -->
+    <div class="sec" style="margin-top:auto">
+      <div class="slabel">⚛ fotolapissable</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <a href="https://apps.fotolapissable.it" target="_blank" rel="noopener" class="sb-link">📱 Apps Territorio</a>
+        <a href="https://www.fotolapissable.it" target="_blank" rel="noopener" class="sb-link">🖼 Fine Art Prints</a>
+        <a href="https://www.behance.net/fotolapissable" target="_blank" rel="noopener" class="sb-link">🎨 Portfolio Behance</a>
       </div>
     </div>
 
@@ -937,12 +958,14 @@ setInterval(fetchWx,10*60*1000);
   </a>
   &nbsp;&nbsp;
   <a href="https://apps.fotolapissable.it" target="_blank" rel="noopener" style="
-    color:rgba(200,129,58,0.6);text-decoration:none;
-    transition:color .2s;cursor:pointer;font-size:0.85em;
+    color:rgba(200,129,58,0.6);text-decoration:none;transition:color .2s;cursor:pointer;font-size:0.85em;
   " onmouseover="this.style.color='rgba(200,129,58,1)'"
-     onmouseout="this.style.color='rgba(200,129,58,0.6)'">
-    · altre app →
-  </a>
+     onmouseout="this.style.color='rgba(200,129,58,0.6)'">· apps →</a>
+  &nbsp;
+  <a href="https://www.behance.net/fotolapissable" target="_blank" rel="noopener" style="
+    color:rgba(200,129,58,0.6);text-decoration:none;transition:color .2s;cursor:pointer;font-size:0.85em;
+  " onmouseover="this.style.color='rgba(200,129,58,1)'"
+     onmouseout="this.style.color='rgba(200,129,58,0.6)'">· behance →</a>
 </div>
 
 <!-- ══ PWA INSTALL BANNER ══════════════════════════════════ -->
