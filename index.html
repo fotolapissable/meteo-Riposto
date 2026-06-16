@@ -294,6 +294,23 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   border-radius:2px;height:14px;
 }
 @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── DAILY FORECAST CARDS ───────────────────── */
+.fcday{
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:4px;padding:9px 10px;margin-bottom:6px;
+  display:grid;grid-template-columns:auto 1fr auto auto;
+  align-items:center;gap:8px;
+}
+.fcday:last-child{margin-bottom:0}
+.fcd-icon{font-size:22px;line-height:1}
+.fcd-name{font-family:var(--font-h);font-size:9px;font-weight:700;color:var(--amber);letter-spacing:1.5px;text-transform:uppercase}
+.fcd-desc{font-size:9px;color:var(--text-dim);margin-top:2px;letter-spacing:.3px}
+.fcd-prob{font-size:9px;color:var(--cyan);margin-top:2px}
+.fcd-temps{text-align:right}
+.fcd-max{font-family:var(--font-h);font-size:15px;font-weight:700;color:#ff9966}
+.fcd-min{font-family:var(--font-h);font-size:12px;color:#88bbff;margin-top:1px}
+.fcd-wind{text-align:right;font-size:9px;color:var(--text-dim);letter-spacing:.5px}
 </style>
 </head>
 <body>
@@ -307,11 +324,10 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 <!-- SOURCE STATUS BAR -->
 <div id="srcbar">
-  <div class="src"><div class="sdot g" id="rv-dot"></div><span>RAINVIEWER RADAR</span></div>
-  <div class="src"><div class="sdot c" id="bz-dot"></div><span id="bz-lbl">BLITZORTUNG WS</span></div>
-  <div class="src"><div class="sdot a"></div><span>OPEN-METEO NWP</span></div>
-  <div class="src"><div class="sdot off"></div><span>DPC METEOALARM</span></div>
-  <div style="margin-left:auto;font-size:7.5px;color:#445;letter-spacing:1px">RAGGIO: 50 KM · AGGIORN: 5 MIN</div>
+  <div class="src"><div class="sdot g" id="rv-dot"></div><span>RADAR</span></div>
+  <div class="src"><div class="sdot c" id="bz-dot"></div><span id="bz-lbl">FULMINI</span></div>
+  <div class="src"><div class="sdot a"></div><span>PREVISIONI</span></div>
+  <div style="margin-left:auto;font-size:7.5px;color:#445;letter-spacing:1px">50 KM · 5 MIN</div>
 </div>
 
 <div id="main">
@@ -364,24 +380,6 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       </div>
     </div>
 
-    <!-- ETA TEMPORALI -->
-    <div class="sec">
-      <div class="slabel">🌩 ETA Celle Temporalesche</div>
-      <div class="eta-wrap">
-        <div class="eta-lbl">ARRIVO STIMATO PRECIPITAZIONI</div>
-        <div><span class="eta-val" id="eta-v">--</span><span class="eta-unit"> min</span></div>
-      </div>
-      <div class="cdir">
-        <div class="compass">
-          <div class="needle" id="needle"></div>
-        </div>
-        <div class="cdir-info">
-          <div class="cdir-main" id="cdir-main">Calcolo vettore…</div>
-          <div class="cdir-sub" id="cdir-sub">VENTO: -- KM/H</div>
-        </div>
-      </div>
-    </div>
-
     <!-- ALLERTA -->
     <div class="sec">
       <div class="slabel">🛡 Allerta Meteo</div>
@@ -392,20 +390,15 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="asub" id="asub">Condizioni nella norma · Catania CT</div>
         </div>
       </div>
-      <div style="font-size:7.5px;color:var(--text-dim);letter-spacing:.5px;line-height:1.6">
-        Stima automatica da codici WMO + soglie pluviometriche. Per allerte ufficiali: <span style="color:var(--amber)">protezionecivile.gov.it</span>
-      </div>
+
     </div>
 
-    <!-- PREVISIONE +1H -->
+    <!-- PREVISIONE 2 GIORNI -->
     <div class="sec">
-      <div class="slabel">📊 Previsione +6h</div>
-      <div class="fcbars" id="fcbars">
-        <div class="shim" style="width:100%;height:40px"></div>
-      </div>
-      <div class="fclegend">
-        <span style="color:var(--cyan)">▪ Precipitazioni</span>
-        <span style="color:var(--amber)">▪ Temporale</span>
+      <div class="slabel">📅 Domani e dopodomani</div>
+      <div id="fcdays">
+        <div class="shim" style="height:54px;margin-bottom:6px"></div>
+        <div class="shim" style="height:54px"></div>
       </div>
     </div>
 
@@ -635,7 +628,7 @@ async function fetchWx(){
       `?latitude=${POS.lat}&longitude=${POS.lng}`+
       `&current=temperature_2m,apparent_temperature,precipitation,cloudcover,windspeed_10m,winddirection_10m,weathercode`+
       `&hourly=precipitation,precipitation_probability,cloudcover,windspeed_10m,winddirection_10m,weathercode`+
-      `&forecast_days=1&timezone=Europe%2FRome&models=best_match`;
+      `&forecast_days=3&timezone=Europe%2FRome&models=best_match`;
     wxData=await(await fetch(url)).json();
     const c=wxData.current;
     curWdir=c.winddirection_10m; curWspd=c.windspeed_10m;
@@ -651,51 +644,13 @@ async function fetchWx(){
     document.getElementById('wx-pr').innerHTML=`${c.precipitation.toFixed(1)}<span class="wunit">mm</span>`;
     document.getElementById('wxbanner').textContent=WMO[c.weathercode]||`Codice WMO ${c.weathercode}`;
 
-    updateETA(wxData);
     updateAlert(c.weathercode,c.precipitation);
-    updateFcBars(wxData);
+    updateFcDays(wxData);
   }catch(e){
     document.getElementById('wxbanner').textContent='Errore connessione Open-Meteo';
   }
 }
 
-function updateETA(d){
-  const now=new Date();
-  const times=d.hourly.time, prs=d.hourly.precipitation, probs=d.hourly.precipitation_probability, codes=d.hourly.weathercode;
-  let eta=null, nxtCode=0;
-
-  for(let i=0;i<times.length;i++){
-    const t=new Date(times[i]);
-    if(t<=now)continue;
-    const dm=(t-now)/60000;
-    if(dm>180)break;
-    if(prs[i]>0.05||probs[i]>25||codes[i]>=61){
-      eta=Math.round(dm); nxtCode=codes[i]; break;
-    }
-  }
-
-  const etaEl=document.getElementById('eta-v');
-  const etaUnit=document.querySelector('.eta-unit');
-  const etaLbl=document.querySelector('.eta-lbl');
-
-  if(eta!==null){
-    etaEl.textContent=eta;
-    etaUnit.textContent=' min';
-    etaLbl.textContent=nxtCode>=95?'⚡ TEMPORALE STIMATO':'ARRIVO STIMATO PRECIPITAZIONI';
-    etaEl.style.color=eta<30?'#ff9966':'var(--amber)';
-  } else {
-    etaEl.textContent='—';
-    etaUnit.textContent='';
-    etaLbl.textContent='NESSUNA PRECIP. NELLE PROSSIME 3H';
-    etaEl.style.color='var(--amber)';
-  }
-
-  // Compass: wind approach direction
-  const approachDeg=(curWdir+180)%360;
-  document.getElementById('needle').style.transform=`rotate(${approachDeg}deg)`;
-  document.getElementById('cdir-main').textContent=`Approccio da ${dText(approachDeg)} (${Math.round(approachDeg)}°)`;
-  document.getElementById('cdir-sub').textContent=`VENTO: ${Math.round(curWspd)} KM/H · PROVENIENZA: ${dText(curWdir)}`;
-}
 
 function updateAlert(code,pr){
   const box=document.getElementById('abox');
@@ -721,27 +676,49 @@ function updateAlert(code,pr){
   }
 }
 
-function updateFcBars(d){
-  const now=new Date();
-  const cont=document.getElementById('fcbars');
-  cont.innerHTML='';
-  const times=d.hourly.time, prs=d.hourly.precipitation, codes=d.hourly.weathercode, probs=d.hourly.precipitation_probability;
-  const MAX=4; let cnt=0;
+function wmoIcon(code){
+  if(code>=95)return'⛈';
+  if(code>=80)return'🌧';
+  if(code>=61)return'🌦';
+  if(code>=51)return'🌂';
+  if(code>=45)return'🌫';
+  if(code>=3)return'☁';
+  if(code>=2)return'⛅';
+  return'☀';
+}
 
-  for(let i=0;i<times.length&&cnt<6;i++){
-    const t=new Date(times[i]);
-    if(t<=now)continue;
-    const pct=Math.min(100,(prs[i]/MAX)*100);
-    const isSt=codes[i]>=95;
-    const lbl=t.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Rome'});
-    const w=document.createElement('div');
-    w.className='fcwrap';
-    const barCls=prs[i]>0.05?(isSt?'storm':'rain'):'none';
-    w.innerHTML=`<div class="fcbar ${barCls}" style="height:${Math.max(4,pct)}%"></div><div class="fclbl">${lbl.slice(0,5)}</div>`;
-    cont.appendChild(w);
-    cnt++;
+function updateFcDays(d){
+  const cont=document.getElementById('fcdays');
+  if(!d.daily){cont.innerHTML='<div style="font-size:9px;color:var(--text-dim)">Dati non disponibili</div>';return;}
+  const {time,weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,winddirection_10m_dominant}=d.daily;
+  // skip today (index 0), show tomorrow (1) and day after (2)
+  const days=['Domani','Dopodimani'];
+  cont.innerHTML='';
+  for(let i=1;i<=2;i++){
+    if(!time[i])continue;
+    const code=weathercode[i]||0;
+    const desc=WMO[code]||('Codice '+code);
+    const prob=precipitation_probability_max[i]||0;
+    const wspd=Math.round(windspeed_10m_max[i]||0);
+    const wdir=dText(winddirection_10m_dominant[i]||0);
+    const tmax=Math.round(temperature_2m_max[i]);
+    const tmin=Math.round(temperature_2m_min[i]);
+    const card=document.createElement('div');
+    card.className='fcday';
+    card.innerHTML=`
+      <div class="fcd-icon">${wmoIcon(code)}</div>
+      <div>
+        <div class="fcd-name">${days[i-1]}</div>
+        <div class="fcd-desc">${desc}</div>
+        ${prob>10?`<div class="fcd-prob">💧 ${prob}% prob. pioggia</div>`:''}
+      </div>
+      <div class="fcd-wind">${wdir}<br>${wspd} km/h</div>
+      <div class="fcd-temps">
+        <div class="fcd-max">${tmax}°</div>
+        <div class="fcd-min">${tmin}°</div>
+      </div>`;
+    cont.appendChild(card);
   }
-  if(!cnt)cont.innerHTML='<div style="font-size:9px;color:var(--text-dim);padding:8px 0">Nessun dato orario disponibile</div>';
 }
 
 // ══════════════════════════════════════════════
