@@ -210,7 +210,10 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
 
 /* ── MAP AREA ───────────────────────────────── */
 #mapc{flex:1;position:relative;overflow:hidden}
-#map{width:100%;height:100%}
+#map{width:100%;height:100%;background:var(--bg)}
+.leaflet-base-pane{
+  filter:invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.92) saturate(0.9);
+}
 
 /* ── MAP BUTTONS ───────────────────────────── */
 #mctrl{
@@ -631,9 +634,17 @@ tick(); setInterval(tick,1000);
 // ══════════════════════════════════════════════
 const map = L.map('map',{center:[POS.lat,POS.lng],zoom:9,zoomControl:false,attributionControl:true});
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
-  attribution:'©<a href="https://www.openstreetmap.org">OSM</a> ©<a href="https://carto.com">CartoDB</a>',
-  subdomains:'abcd',maxZoom:19
+// Pane dedicato per la basemap: il filtro CSS "dark" si applica solo qui,
+// così radar e satellite (nel pane di default) restano con i loro colori reali.
+map.createPane('base');
+map.getPane('base').style.zIndex = 150;
+
+const TRANSPARENT_TILE='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'©<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  subdomains:'abc',maxZoom:19,pane:'base',
+  errorTileUrl:TRANSPARENT_TILE
 }).addTo(map);
 
 // Radius rings (inizializzati con posizione default, aggiornati da updateMapLocation)
