@@ -521,7 +521,6 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
 
     <div id="mctrl">
       <button class="mbtn on" id="btn-radar" onclick="toggleLayer('radar')" aria-label="Attiva/disattiva livello radar">⬤ Radar</button>
-      <button class="mbtn on" id="btn-sat"   onclick="toggleLayer('sat')" aria-label="Attiva/disattiva satellite infrarosso">⬤ Satellite IR</button>
       <button class="mbtn on" id="btn-ltn"   onclick="toggleLayer('ltn')" aria-label="Attiva/disattiva fulmini">⚡ Fulmini</button>
       <button class="mbtn" id="btn-geo" onclick="requestGeolocation()" style="color:#00d4ff;border-color:rgba(0,212,255,0.35)" aria-label="Usa la mia posizione">📍 La mia posizione</button>
       <button class="mbtn" id="btn-reset" onclick="resetToDefault()" aria-label="Torna a Riposto">🏠 Riposto</button>
@@ -678,20 +677,24 @@ for(let a=0;a<360;a+=45){
 
 // ══════════════════════════════════════════════
 // RAINVIEWER
+// ⚠ Dal 1° gen 2026 RainViewer ha ristretto l'API gratuita:
+//   satellite e nowcast dismessi, zoom massimo 7, solo
+//   color scheme "2" (Universal Blue). maxNativeZoom fa sì
+//   che Leaflet ingrandisca client-side oltre lo zoom 7
+//   invece di richiedere tile a zoom non supportati dal
+//   server (che altrimenti risponderebbero con un errore).
 // ══════════════════════════════════════════════
-let rfr=[], sfr=[], fidx=-1, rL=null, sL=null;
-let vis={radar:true,sat:true,ltn:true};
+let rfr=[], fidx=-1, rL=null;
+let vis={radar:true,ltn:true};
 let animOn=false, animTmr=null;
 
 async function initRV(retryCount){
   retryCount = retryCount || 0;
   try{
     const d=await(await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();
-    rfr=[...(d.radar.past||[]),...(d.radar.nowcast||[])];
-    sfr=[...(d.satellite?.infrared||[])];
+    rfr=[...(d.radar.past||[])];
     fidx=rfr.length-1;
     drawRadar(fidx);
-    drawSat(sfr.length-1);
     document.getElementById('rv-dot').style.background='var(--green)';
   }catch(e){
     if(retryCount<3){
@@ -711,30 +714,19 @@ function drawRadar(i){
   const fr=rfr[Math.min(i,rfr.length-1)];
   if(rL)map.removeLayer(rL); rL=null;
   if(!vis.radar)return;
-  rL=L.tileLayer(`https://tilecache.rainviewer.com${fr.path}/256/{z}/{x}/{y}/6/1_1.png`,
-    {opacity:.65,zIndex:10}).addTo(map);
+  rL=L.tileLayer(`https://tilecache.rainviewer.com${fr.path}/256/{z}/{x}/{y}/2/1_1.png`,
+    {opacity:.65,zIndex:10,maxNativeZoom:7,maxZoom:19}).addTo(map);
   const ts=new Date(fr.time*1000);
   const t=ts.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Rome'});
-  const isFut=fr.time>Date.now()/1000;
-  document.getElementById('rts').textContent=`RADAR: ${t} ${isFut?'(NOWCAST)':'(STORICO)'}`;
+  document.getElementById('rts').textContent=`RADAR: ${t} (STORICO)`;
   document.getElementById('pblbl').textContent=(i===rfr.length-1)?'LIVE':t;
-}
-
-function drawSat(i){
-  if(!sfr.length||i<0)return;
-  const fr=sfr[Math.min(i,sfr.length-1)];
-  if(sL)map.removeLayer(sL); sL=null;
-  if(!vis.sat)return;
-  sL=L.tileLayer(`https://tilecache.rainviewer.com${fr.path}/256/{z}/{x}/{y}/0/0.png`,
-    {opacity:.28,zIndex:5}).addTo(map);
 }
 
 function toggleLayer(k){
   vis[k]=!vis[k];
-  const id={'radar':'btn-radar','sat':'btn-sat','ltn':'btn-ltn'}[k];
+  const id={'radar':'btn-radar','ltn':'btn-ltn'}[k];
   document.getElementById(id).classList.toggle('on',vis[k]);
   if(k==='radar')drawRadar(fidx);
-  if(k==='sat')drawSat(sfr.length-1);
   if(k==='ltn'){
     lMrks.forEach(m=>{ vis.ltn?m.addTo(map):map.removeLayer(m); });
   }

@@ -5,7 +5,7 @@
 //    il refresh automatico su tutti i dispositivi.
 // ═══════════════════════════════════════════════════════
 
-const APP_VERSION = 'v6';
+const APP_VERSION = 'v7';
 const CACHE_NAME  = `meteo-riposto-${APP_VERSION}`;
 const TILE_CACHE_NAME = `meteo-riposto-tiles-${APP_VERSION}`;
 const TILE_CACHE_MAX  = 300; // limite entry per non far crescere la cache all'infinito
