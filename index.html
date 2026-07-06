@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>METEO RIPOSTO // fotolapissable</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NN6FP74TCW"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-NN6FP74TCW");window.addEventListener("beforeinstallprompt",function(){gtag("event","pwa_install_prompt");});window.addEventListener("appinstalled",function(){gtag("event","pwa_installed");});</script>
@@ -44,6 +44,9 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 #hdr{
   height:46px;display:flex;align-items:center;justify-content:space-between;
   padding:0 14px;background:#04070e;
+  padding-top:env(safe-area-inset-top,0);
+  padding-left:calc(14px + env(safe-area-inset-left,0));
+  padding-right:calc(14px + env(safe-area-inset-right,0));
   border-bottom:1px solid var(--border);
   position:relative;z-index:200;
 }
@@ -337,7 +340,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   #srcbar{gap:9px;padding:0 10px;font-size:8px}
   #srcbar>div:last-child{display:none}
 
-  #main{flex-direction:column;height:calc(100vh - 70px)}
+  #main{flex-direction:column;height:calc(100vh - 88px - env(safe-area-inset-bottom,0) - env(safe-area-inset-top,0))}
   #sb{
     width:100%;min-width:0;max-height:46vh;
     border-right:none;border-bottom:1px solid var(--border);
@@ -443,6 +446,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="asub" id="asub">Condizioni nella norma · Catania CT</div>
         </div>
       </div>
+      <a href="https://www.protezionecivile.gov.it/it/attivita/previsione-e-prevenzione/servizio-nazionale-rischio-meteo/bollettini-e-avvisi" target="_blank" rel="noopener" class="sb-link" style="font-size:9px;text-align:center">📋 Bollettino ufficiale Protezione Civile →</a>
 
     </div>
 
@@ -473,25 +477,26 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     <div id="map"></div>
 
     <div id="mzoom">
-      <button class="zbtn" onclick="map.zoomIn()">+</button>
-      <button class="zbtn" onclick="map.zoomOut()">−</button>
+      <button class="zbtn" onclick="map.zoomIn()" aria-label="Zoom avanti">+</button>
+      <button class="zbtn" onclick="map.zoomOut()" aria-label="Zoom indietro">−</button>
     </div>
 
     <div id="mctrl">
-      <button class="mbtn on" id="btn-radar" onclick="toggleLayer('radar')">⬤ Radar</button>
-      <button class="mbtn on" id="btn-sat"   onclick="toggleLayer('sat')">⬤ Satellite IR</button>
-      <button class="mbtn on" id="btn-ltn"   onclick="toggleLayer('ltn')">⚡ Fulmini</button>
-      <button class="mbtn" id="btn-geo" onclick="requestGeolocation()" style="color:#00d4ff;border-color:rgba(0,212,255,0.35)">📍 La mia posizione</button>
-      <button class="mbtn"    id="btn-anim"  onclick="toggleAnim()">▶ Animazione</button>
+      <button class="mbtn on" id="btn-radar" onclick="toggleLayer('radar')" aria-label="Attiva/disattiva livello radar">⬤ Radar</button>
+      <button class="mbtn on" id="btn-sat"   onclick="toggleLayer('sat')" aria-label="Attiva/disattiva satellite infrarosso">⬤ Satellite IR</button>
+      <button class="mbtn on" id="btn-ltn"   onclick="toggleLayer('ltn')" aria-label="Attiva/disattiva fulmini">⚡ Fulmini</button>
+      <button class="mbtn" id="btn-geo" onclick="requestGeolocation()" style="color:#00d4ff;border-color:rgba(0,212,255,0.35)" aria-label="Usa la mia posizione">📍 La mia posizione</button>
+      <button class="mbtn" id="btn-reset" onclick="resetToDefault()" aria-label="Torna a Riposto">🏠 Riposto</button>
+      <button class="mbtn"    id="btn-anim"  onclick="toggleAnim()" aria-label="Avvia/ferma animazione radar">▶ Animazione</button>
     </div>
 
     <div id="rts">RADAR: caricamento…</div>
 
     <div id="pbbar">
-      <button class="pbbtn" onclick="prevFrame()">◀</button>
+      <button class="pbbtn" onclick="prevFrame()" aria-label="Frame precedente">◀</button>
       <span id="pblbl">LIVE</span>
-      <button class="pbbtn on" onclick="goLive()">⬤ LIVE</button>
-      <button class="pbbtn" onclick="nextFrame()">▶</button>
+      <button class="pbbtn on" onclick="goLive()" aria-label="Torna al live">⬤ LIVE</button>
+      <button class="pbbtn" onclick="nextFrame()" aria-label="Frame successivo">▶</button>
     </div>
   </div>
 </div><!-- /main -->
@@ -533,6 +538,10 @@ function updateMapLocation(lat, lng, label, region) {
   // Ricarica dati meteo per nuova posizione
   initRV();
   fetchWx();
+}
+
+function resetToDefault() {
+  updateMapLocation(DEFAULT.lat, DEFAULT.lng, DEFAULT.label, DEFAULT.region);
 }
 
 function requestGeolocation() {
@@ -616,7 +625,8 @@ let rfr=[], sfr=[], fidx=-1, rL=null, sL=null;
 let vis={radar:true,sat:true,ltn:true};
 let animOn=false, animTmr=null;
 
-async function initRV(){
+async function initRV(retryCount){
+  retryCount = retryCount || 0;
   try{
     const d=await(await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();
     rfr=[...(d.radar.past||[]),...(d.radar.nowcast||[])];
@@ -626,8 +636,15 @@ async function initRV(){
     drawSat(sfr.length-1);
     document.getElementById('rv-dot').style.background='var(--green)';
   }catch(e){
-    document.getElementById('rts').textContent='RADAR: CONNESSIONE FALLITA';
-    document.getElementById('rv-dot').style.background='#ff4444';
+    if(retryCount<3){
+      const delay=(2**retryCount)*3000; // 3s, 6s, 12s
+      document.getElementById('rts').textContent=`RADAR: nuovo tentativo tra ${delay/1000}s…`;
+      document.getElementById('rv-dot').style.background='var(--yellow)';
+      setTimeout(()=>initRV(retryCount+1), delay);
+    } else {
+      document.getElementById('rts').textContent='RADAR: CONNESSIONE FALLITA';
+      document.getElementById('rv-dot').style.background='#ff4444';
+    }
   }
 }
 
@@ -721,7 +738,7 @@ async function fetchWx(){
     const hPr = wxData.hourly.precipitation;
     const hProb = wxData.hourly.precipitation_probability;
     const hCodes = wxData.hourly.weathercode;
-    let todayTotalPr = 0;
+    let todayTotalPr = c.precipitation || 0;
     let nextRainHour = null, nextRainProb = 0;
     for(let i=0; i<hTimes.length; i++){
       const t = new Date(hTimes[i]);
@@ -1006,6 +1023,35 @@ setInterval(initRV,5*60*1000);
 setInterval(fetchWx,10*60*1000);
 
 // ══════════════════════════════════════════════
+// RESIZE / ORIENTATION → Leaflet invalidateSize
+// ══════════════════════════════════════════════
+let resizeTmr=null;
+function onViewportChange(){
+  clearTimeout(resizeTmr);
+  resizeTmr=setTimeout(()=>{ map.invalidateSize(); }, 250);
+}
+window.addEventListener('resize', onViewportChange);
+window.addEventListener('orientationchange', onViewportChange);
+
+// ══════════════════════════════════════════════
+// VISIBILITY → refresh dati se la pagina torna visibile ed è "vecchia"
+// ══════════════════════════════════════════════
+let lastActiveTs=Date.now();
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible'){
+    const away=Date.now()-lastActiveTs;
+    map.invalidateSize();
+    if(away>3*60*1000){ // fuori dall'app per più di 3 minuti
+      fetchWx();
+      initRV();
+    }
+    if(!bzConn && !simT) initBz();
+  } else {
+    lastActiveTs=Date.now();
+  }
+});
+
+// ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
 (async()=>{
@@ -1020,7 +1066,9 @@ setInterval(fetchWx,10*60*1000);
 <!-- ══ BRANDING FOOTER ══════════════════════════════════════ -->
 <div id="brand-footer" style="
   position:fixed;bottom:0;left:0;right:0;z-index:5000;
-  height:18px;display:flex;align-items:center;justify-content:center;
+  height:calc(18px + env(safe-area-inset-bottom,0));
+  padding-bottom:env(safe-area-inset-bottom,0);
+  display:flex;align-items:center;justify-content:center;
   background:rgba(4,7,14,0.92);border-top:1px solid rgba(200,129,58,0.20);
   font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;
 ">
@@ -1046,7 +1094,7 @@ setInterval(fetchWx,10*60*1000);
 
 <!-- ══ PWA INSTALL BANNER ══════════════════════════════════ -->
 <div id="pwa-banner" style="
-  display:none;position:fixed;top:52px;left:50%;transform:translateX(-50%);
+  display:none;position:fixed;top:76px;left:50%;transform:translateX(-50%);
   z-index:9999;background:#0f1626;border:1px solid rgba(200,129,58,0.5);
   border-radius:4px;padding:10px 16px;font-family:'Share Tech Mono',monospace;
   font-size:10px;letter-spacing:1px;color:#e8f2ff;
