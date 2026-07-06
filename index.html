@@ -376,7 +376,15 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
 <div id="hdr">
   <div id="hdr-title">⚡ METEO // RIPOSTO</div>
   <div id="hdr-sub">37.7285°N &nbsp;·&nbsp; 15.2027°E &nbsp;·&nbsp; CT, SICILIA &nbsp;·&nbsp; IONIO SETTENTRIONALE</div>
-  <div id="hdr-clock">--:--:--</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div id="hdr-clock">--:--:--</div>
+    <a href="./guida.html" target="_blank" rel="noopener" aria-label="Apri la guida"
+       style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+       border:1px solid var(--border);border-radius:50%;color:var(--text-mid);
+       font-family:var(--font-h);font-size:11px;text-decoration:none;flex-shrink:0"
+       onmouseover="this.style.color='var(--amber)';this.style.borderColor='var(--amber)'"
+       onmouseout="this.style.color='var(--text-mid)';this.style.borderColor='var(--border)'">?</a>
+  </div>
 </div>
 
 <!-- SOURCE STATUS BAR -->

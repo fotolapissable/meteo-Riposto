@@ -5,7 +5,7 @@
 //    il refresh automatico su tutti i dispositivi.
 // ═══════════════════════════════════════════════════════
 
-const APP_VERSION = 'v5';
+const APP_VERSION = 'v6';
 const CACHE_NAME  = `meteo-riposto-${APP_VERSION}`;
 const TILE_CACHE_NAME = `meteo-riposto-tiles-${APP_VERSION}`;
 const TILE_CACHE_MAX  = 300; // limite entry per non far crescere la cache all'infinito
@@ -13,6 +13,7 @@ const TILE_CACHE_MAX  = 300; // limite entry per non far crescere la cache all'i
 // Risorse statiche da cachare all'installazione
 const STATIC_ASSETS = [
   './index.html',
+  './guida.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
