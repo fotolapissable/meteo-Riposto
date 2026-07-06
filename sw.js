@@ -5,7 +5,7 @@
 //    il refresh automatico su tutti i dispositivi.
 // ═══════════════════════════════════════════════════════
 
-const APP_VERSION = 'v4';
+const APP_VERSION = 'v5';
 const CACHE_NAME  = `meteo-riposto-${APP_VERSION}`;
 const TILE_CACHE_NAME = `meteo-riposto-tiles-${APP_VERSION}`;
 const TILE_CACHE_MAX  = 300; // limite entry per non far crescere la cache all'infinito
@@ -66,7 +66,7 @@ self.addEventListener('fetch', event => {
   // mostra l'ultimo dato scaricato invece di restare vuota.
   const isMapTile =
     url.hostname.includes('tilecache.rainviewer.com') ||
-    url.hostname.includes('basemaps.cartocdn.com');
+    url.hostname.includes('tile.openstreetmap.org');
 
   if (isMapTile) {
     event.respondWith(
