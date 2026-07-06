@@ -339,7 +339,7 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
   #hdr-title{font-size:11px;letter-spacing:2px}
   #hdr-clock{font-size:14px}
   #srcbar{gap:9px;padding:0 10px;font-size:8px}
-  #srcbar>div:last-child{display:none}
+  #srcbar>div:last-child span:last-child{display:none}
 
   #main{
     flex-direction:column;
@@ -381,7 +381,10 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
   <div class="src"><div class="sdot g" id="rv-dot"></div><span>RADAR</span></div>
   <div class="src"><div class="sdot c" id="bz-dot"></div><span id="bz-lbl">FULMINI</span></div>
   <div class="src"><div class="sdot a"></div><span>PREVISIONI</span></div>
-  <div style="margin-left:auto;font-size:7.5px;color:#445;letter-spacing:1px">50 KM · 5 MIN</div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    <button id="share-btn" onclick="shareConditions()" aria-label="Condividi condizioni meteo" style="display:none;background:none;border:1px solid var(--border);color:var(--text-mid);font-family:var(--font-d);font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:2px;cursor:pointer">📤 CONDIVIDI</button>
+    <span style="font-size:7.5px;color:#445;letter-spacing:1px">50 KM · 5 MIN</span>
+  </div>
 </div>
 
 <div id="main">
@@ -405,6 +408,10 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
           <div class="wval cool" id="wx-w">--<span class="wunit">km/h</span></div>
         </div>
         <div class="wcell">
+          <div class="wlbl">Raffiche</div>
+          <div class="wval cool" id="wx-g">--<span class="wunit">km/h</span></div>
+        </div>
+        <div class="wcell">
           <div class="wlbl">Dir. Vento</div>
           <div class="wval" id="wx-wd">--</div>
         </div>
@@ -416,6 +423,10 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
           <div class="wlbl">Precipit. oggi</div>
           <div class="wval precip" id="wx-pr">--<span class="wunit">mm</span></div>
         </div>
+        <div class="wcell">
+          <div class="wlbl">Indice UV</div>
+          <div class="wval" id="wx-uv">--</div>
+        </div>
       </div>
       <div id="wxbanner">Caricamento dati meteorologici…</div>
       <div class="cdir">
@@ -425,6 +436,17 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
           <div class="cdir-sub" id="wind-sub">-- km/h</div>
         </div>
       </div>
+      <div id="sundata" style="display:flex;gap:5px;margin-top:6px">
+        <div class="wcell" style="flex:1">
+          <div class="wlbl">🌅 Alba</div>
+          <div class="wval" id="wx-sunrise" style="font-size:13px">--:--</div>
+        </div>
+        <div class="wcell" style="flex:1">
+          <div class="wlbl">🌇 Tramonto</div>
+          <div class="wval" id="wx-sunset" style="font-size:13px">--:--</div>
+        </div>
+      </div>
+      <div id="goldenhour" style="display:none;margin-top:5px;padding:5px 8px;background:var(--amber-dim);border:1px solid var(--border-bright);border-radius:3px;font-size:9px;color:var(--amber);letter-spacing:.5px;text-align:center"></div>
     </div>
 
     <!-- FULMINAZIONE -->
@@ -547,6 +569,18 @@ function updateMapLocation(lat, lng, label, region) {
 
 function resetToDefault() {
   updateMapLocation(DEFAULT.lat, DEFAULT.lng, DEFAULT.label, DEFAULT.region);
+}
+
+if(navigator.share){
+  document.getElementById('share-btn').style.display='inline-block';
+}
+function shareConditions(){
+  if(!wxData || !navigator.share) return;
+  const c=wxData.current;
+  const temp=Math.round(c.temperature_2m);
+  const desc=WMO[c.weathercode]||'';
+  const text=`⚡ Meteo ${CUR_LABEL}: ${temp}°C, ${desc}\nVento ${Math.round(c.windspeed_10m)} km/h · UV ${c.uv_index!=null?Math.round(c.uv_index):'--'}\n`;
+  navigator.share({ title:'Meteo '+CUR_LABEL, text, url:location.href }).catch(()=>{});
 }
 
 function requestGeolocation() {
@@ -714,9 +748,9 @@ async function fetchWx(){
   try{
     const url=`https://api.open-meteo.com/v1/forecast`+
       `?latitude=${POS.lat}&longitude=${POS.lng}`+
-      `&current=temperature_2m,apparent_temperature,precipitation,cloudcover,windspeed_10m,winddirection_10m,weathercode`+
+      `&current=temperature_2m,apparent_temperature,precipitation,cloudcover,windspeed_10m,winddirection_10m,windgusts_10m,weathercode,uv_index`+
       `&hourly=precipitation,precipitation_probability,cloudcover,windspeed_10m,winddirection_10m,weathercode`+
-      `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,winddirection_10m_dominant`+
+      `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,winddirection_10m_dominant,sunrise,sunset,uv_index_max`+
       `&forecast_days=3&timezone=Europe%2FRome&models=best_match`;
     wxData=await(await fetch(url)).json();
     const c=wxData.current;
@@ -728,8 +762,14 @@ async function fetchWx(){
 
     document.getElementById('wx-f').innerHTML=`${Math.round(c.apparent_temperature)}<span class="wunit">°C</span>`;
     document.getElementById('wx-w').innerHTML=`${Math.round(c.windspeed_10m)}<span class="wunit">km/h</span>`;
+    document.getElementById('wx-g').innerHTML=`${Math.round(c.windgusts_10m||0)}<span class="wunit">km/h</span>`;
     document.getElementById('wx-wd').textContent=`${dText(c.winddirection_10m)} ${Math.round(c.winddirection_10m)}°`;
     document.getElementById('wx-cl').innerHTML=`${c.cloudcover}<span class="wunit">%</span>`;
+
+    const uvEl=document.getElementById('wx-uv');
+    const uv=c.uv_index!=null?Math.round(c.uv_index*10)/10:null;
+    uvEl.textContent=uv!=null?uv:'--';
+    uvEl.className='wval '+(uv>=8?'hot':uv>=6?'':'cool');
 
     // Bussola vento
     document.getElementById('wind-needle').style.transform=`rotate(${c.winddirection_10m}deg)`;
@@ -765,6 +805,32 @@ async function fetchWx(){
     }
     document.getElementById('wxbanner').textContent = bannerText;
 
+    // Alba / Tramonto / Golden hour
+    if(wxData.daily && wxData.daily.sunrise && wxData.daily.sunrise[0]){
+      const sunrise=new Date(wxData.daily.sunrise[0]);
+      const sunset=new Date(wxData.daily.sunset[0]);
+      const fmtT=d=>d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Rome'});
+      document.getElementById('wx-sunrise').textContent=fmtT(sunrise);
+      document.getElementById('wx-sunset').textContent=fmtT(sunset);
+
+      const GH_MIN=40*60*1000; // 40 minuti attorno ad alba/tramonto
+      const now=nowTs.getTime();
+      const ghEl=document.getElementById('goldenhour');
+      const nearSunrise=Math.abs(now-sunrise.getTime())<GH_MIN;
+      const nearSunset=Math.abs(now-sunset.getTime())<GH_MIN;
+      const beforeSunrise=sunrise.getTime()-now>0 && sunrise.getTime()-now<GH_MIN;
+      const beforeSunset=sunset.getTime()-now>0 && sunset.getTime()-now<GH_MIN;
+      if(nearSunrise||beforeSunrise){
+        ghEl.style.display='block';
+        ghEl.textContent='📸 GOLDEN HOUR — luce dell\'alba';
+      } else if(nearSunset||beforeSunset){
+        ghEl.style.display='block';
+        ghEl.textContent='📸 GOLDEN HOUR — luce del tramonto';
+      } else {
+        ghEl.style.display='none';
+      }
+    }
+
     updateAlert(c.weathercode,c.precipitation);
     updateFcDays(wxData);
 
@@ -783,8 +849,15 @@ async function fetchWx(){
         document.getElementById('wx-t').innerHTML=`${Math.round(c.temperature_2m)}<span class="wunit">°C</span>`;
         document.getElementById('wx-f').innerHTML=`${Math.round(c.apparent_temperature)}<span class="wunit">°C</span>`;
         document.getElementById('wx-w').innerHTML=`${Math.round(c.windspeed_10m)}<span class="wunit">km/h</span>`;
+        document.getElementById('wx-g').innerHTML=`${Math.round(c.windgusts_10m||0)}<span class="wunit">km/h</span>`;
         document.getElementById('wx-wd').textContent=`${dText(c.winddirection_10m)} ${Math.round(c.winddirection_10m)}°`;
         document.getElementById('wx-cl').innerHTML=`${c.cloudcover}<span class="wunit">%</span>`;
+        if(c.uv_index!=null) document.getElementById('wx-uv').textContent=Math.round(c.uv_index*10)/10;
+        if(cached.data.daily && cached.data.daily.sunrise){
+          const fmtT=d=>new Date(d).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Rome'});
+          document.getElementById('wx-sunrise').textContent=fmtT(cached.data.daily.sunrise[0]);
+          document.getElementById('wx-sunset').textContent=fmtT(cached.data.daily.sunset[0]);
+        }
         document.getElementById('wind-needle').style.transform=`rotate(${c.winddirection_10m}deg)`;
         document.getElementById('wind-main').textContent=`Vento da ${dText(c.winddirection_10m)}`;
         document.getElementById('wind-sub').textContent=`${Math.round(c.windspeed_10m)} km/h · ${Math.round(c.winddirection_10m)}°`;
@@ -922,7 +995,10 @@ function clearSim(){ if(simT){clearTimeout(simT);simT=null;} }
 
 function startSim(){
   document.getElementById('bz-dot').style.background='#ff8844';
-  document.getElementById('bz-lbl').textContent='BLITZORTUNG [DEMO]';
+  const isMobileNet = navigator.connection && ['cellular','2g','3g'].includes(navigator.connection.type||navigator.connection.effectiveType);
+  document.getElementById('bz-lbl').textContent = isMobileNet
+    ? 'FULMINI [DEMO — rete dati blocca WebSocket]'
+    : 'BLITZORTUNG [DEMO]';
   lLog=[];
   renderLog();
 
@@ -1188,6 +1264,28 @@ window.addEventListener('appinstalled', () => {
   banner.style.display = 'none';
   console.log('[PWA] App installata!');
 });
+
+// ── iOS: beforeinstallprompt non esiste, mostro istruzioni manuali ──
+(function(){
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+  if(isIOS && !isStandalone){
+    setTimeout(() => {
+      banner.innerHTML = `
+        <span>📲 <span style="color:#C8813A">Aggiungi alla Home:</span> tocca ⬆️ Condividi, poi "Aggiungi a Home"</span>
+        <button id="pwa-dismiss-btn-ios" style="
+          background:none;border:1px solid rgba(200,129,58,0.3);color:#8aabcc;
+          font-family:'Share Tech Mono',monospace;font-size:9px;
+          padding:5px 8px;border-radius:2px;cursor:pointer;
+        ">✕</button>`;
+      banner.style.display = 'flex';
+      document.getElementById('pwa-dismiss-btn-ios').addEventListener('click', () => {
+        banner.style.display = 'none';
+      });
+    }, 3000);
+  }
+})();
 </script>
 
 </body>
