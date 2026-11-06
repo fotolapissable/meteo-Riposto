@@ -892,21 +892,24 @@ async function fetchWx(){
     document.getElementById('wind-main').textContent=`Vento da ${dText(c.winddirection_10m)}`;
     document.getElementById('wind-sub').textContent=`${Math.round(c.windspeed_10m)} km/h · ${Math.round(c.winddirection_10m)}°`;
 
-    // Precipitazioni: somma oraria da adesso a fine giornata (oggi)
+    // Precipitazioni: "oggi" = pioggia già caduta da mezzanotte a adesso
+    // (somma delle ore trascorse), non la previsione per il resto del
+    // giorno — prima veniva sommata solo l'ora corrente + le ore future,
+    // ignorando tutta la pioggia caduta prima di "adesso".
     const nowTs = new Date();
-    const endOfDay = new Date(); endOfDay.setHours(23,59,59,0);
     const hTimes = wxData.hourly.time;
     const hPr = wxData.hourly.precipitation;
     const hProb = wxData.hourly.precipitation_probability;
     const hCodes = wxData.hourly.weathercode;
-    let todayTotalPr = c.precipitation || 0;
+    const todayDateStr = hTimes.length ? hTimes[0].slice(0,10) : null; // hourly[0] = mezzanotte di oggi
+    let todayTotalPr = 0;
     let nextRainHour = null, nextRainProb = 0;
     for(let i=0; i<hTimes.length; i++){
+      if(hTimes[i].slice(0,10) !== todayDateStr) break; // oltre mezzanotte: giorno successivo
       const t = new Date(hTimes[i]);
-      if(t < nowTs) continue;
-      if(t > endOfDay) break;
-      todayTotalPr += hPr[i] || 0;
-      if(nextRainHour === null && (hPr[i] > 0.1 || hProb[i] > 30 || hCodes[i] >= 61)){
+      if(t <= nowTs){
+        todayTotalPr += hPr[i] || 0; // ora già trascorsa (o quella in corso): conta nel totale
+      } else if(nextRainHour === null && (hPr[i] > 0.1 || hProb[i] > 30 || hCodes[i] >= 61)){
         nextRainHour = t;
         nextRainProb = hProb[i];
       }
