@@ -5,7 +5,7 @@
 //    il refresh automatico su tutti i dispositivi.
 // ═══════════════════════════════════════════════════════
 
-const APP_VERSION = 'v8';
+const APP_VERSION = 'v9';
 const CACHE_NAME  = `meteo-riposto-${APP_VERSION}`;
 const TILE_CACHE_NAME = `meteo-riposto-tiles-${APP_VERSION}`;
 const TILE_CACHE_MAX  = 300; // limite entry per non far crescere la cache all'infinito
@@ -62,11 +62,11 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Tile mappa (radar/satellite RainViewer + basemap CartoDB):
+  // Tile mappa (radar WMS Protezione Civile + basemap OpenStreetMap):
   // network-first ma SEMPRE salvate in cache, così offline la mappa
   // mostra l'ultimo dato scaricato invece di restare vuota.
   const isMapTile =
-    url.hostname.includes('tilecache.rainviewer.com') ||
+    url.hostname.includes('radar-geowebcache.protezionecivile.it') ||
     url.hostname.includes('tile.openstreetmap.org');
 
   if (isMapTile) {
@@ -92,7 +92,7 @@ self.addEventListener('fetch', event => {
   // lato client (localStorage) per l'ultimo dato meteo valido.
   const isLiveApi =
     url.hostname.includes('open-meteo.com') ||
-    url.hostname === 'api.rainviewer.com' ||
+    url.hostname === 'radar-api.protezionecivile.it' ||
     url.hostname.includes('blitzortung.org');
 
   if (isLiveApi) {
