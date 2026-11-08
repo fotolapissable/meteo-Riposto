@@ -357,6 +357,45 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
 .fcd-min{font-family:var(--font-h);font-size:12px;color:#88bbff;margin-top:1px}
 .fcd-wind{text-align:right;font-size:9px;color:var(--text-dim);letter-spacing:.5px}
 
+/* ── FUNGHI ─────────────────────────────────── */
+.fng-note-top{font-size:8.5px;color:var(--text-dim);margin-bottom:8px;line-height:1.4}
+.fng-vsnt{
+  background:var(--panel2);border:1px solid var(--border);
+  border-radius:4px;margin-bottom:6px;overflow:hidden;
+}
+.fng-vsnt-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;cursor:pointer;user-select:none;
+}
+.fng-vsnt-name{font-family:var(--font-h);font-size:9px;font-weight:700;color:var(--amber);letter-spacing:1px;text-transform:uppercase}
+.fng-vsnt-sub{font-size:8.5px;color:var(--text-dim);margin-top:2px}
+.fng-vsnt-chev{font-size:9px;color:var(--text-dim);transition:transform .2s}
+.fng-vsnt.open .fng-vsnt-chev{transform:rotate(90deg)}
+.fng-vsnt-body{display:none;padding:0 10px 9px}
+.fng-vsnt.open .fng-vsnt-body{display:block}
+.fng-card{
+  background:var(--panel3);border:1px solid var(--border);border-radius:3px;
+  padding:7px 8px;margin-top:6px;
+}
+.fng-card.fuoristagione{opacity:.5}
+.fng-card-row{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.fng-card-name{font-size:10px;color:var(--text);letter-spacing:.3px}
+.fng-card-lat{font-size:8.5px;font-style:italic;color:var(--text-dim);margin-top:1px}
+.fng-card-note{font-size:9px;color:var(--text-dim);margin-top:4px;line-height:1.4}
+.fng-card-detail{font-size:8px;color:var(--text-dim);margin-top:4px;letter-spacing:.2px}
+.fng-badge{
+  font-family:var(--font-h);font-size:7.5px;font-weight:700;letter-spacing:.5px;
+  padding:3px 6px;border-radius:2px;white-space:nowrap;flex-shrink:0;
+}
+.fng-badge.buone{background:rgba(57,255,20,0.12);color:var(--green);border:1px solid rgba(57,255,20,0.4)}
+.fng-badge.monitorare{background:rgba(255,208,0,0.12);color:var(--yellow);border:1px solid rgba(255,208,0,0.4)}
+.fng-badge.sfavorevoli{background:rgba(255,59,59,0.12);color:var(--red);border:1px solid rgba(255,59,59,0.4)}
+.fng-badge.fuoristagione{background:rgba(138,171,204,0.1);color:var(--text-dim);border:1px solid var(--border)}
+.fng-updated{font-size:8px;color:var(--text-dim);margin-top:7px;text-align:center}
+.fng-updated a{color:var(--amber);text-decoration:none}
+.fng-error{font-size:9px;color:var(--text-dim)}
+.fng-error a{color:var(--amber);text-decoration:none}
+
 /* ── SIDEBAR LINKS ──────────────────────────── */
 .sb-link{
   display:block;padding:7px 9px;background:var(--panel2);
@@ -547,6 +586,17 @@ html,body{width:100%;height:100vh;height:100dvh;background:var(--bg);color:var(-
         <div class="shim" style="height:54px;margin-bottom:6px"></div>
         <div class="shim" style="height:54px"></div>
       </div>
+    </div>
+
+    <!-- CONDIZIONI FUNGHI ETNA -->
+    <div class="sec">
+      <div class="slabel">🍄 Funghi · Versanti Etna</div>
+      <div class="fng-note-top">Stima indicativa (non garanzia) · non riguarda Riposto, qui non c'è bosco</div>
+      <div id="funghi-list">
+        <div class="shim" style="height:40px;margin-bottom:6px"></div>
+        <div class="shim" style="height:40px"></div>
+      </div>
+      <div id="funghi-updated" class="fng-updated"></div>
     </div>
 
 
@@ -1130,6 +1180,123 @@ function updateFcDays(d,icon2i){
 }
 
 // ══════════════════════════════════════════════
+// CONDIZIONI FUNGHI (versanti Etna)
+// ══════════════════════════════════════════════
+// Riposto è costiero, senza bosco: qui mostriamo i punti-bosco dei
+// versanti dell'Etna (stessi punti verificati usati in Etna Trails, per
+// coerenza tra le due app). Nessun punto per il versante Ovest: non
+// abbiamo un riferimento bosco verificato lì.
+const FUNGHI_VERSANTI = [
+  { id:'est', nome:'Est · Zafferana', lat:37.693, lng:15.112, quota:1000, bosco:'Castagno · Quercia' },
+  { id:'nordest', nome:'Nord-Est · Bosco di Malabotta', lat:37.92, lng:15.08, quota:1050, bosco:'Castagno' },
+  { id:'nord', nome:'Nord · Piano Provenzana', lat:37.778, lng:15.047, quota:1800, bosco:'Pino laricio' },
+  { id:'sud', nome:'Sud · Rifugio Sapienza', lat:37.6963, lng:14.9996, quota:1900, bosco:'Margine pineta (quota alta, bosco rado)' }
+];
+
+// Soglie adattate da fonti divulgative europee (Piemonte/Alpi), non
+// misurate sull'Etna — vedi disclaimer in UI.
+const FUNGHI_SPECIE = [
+  { id:'retina', nome:'Porcino estatino (retina)', latNome:'Boletus reticulatus', icona:'🍄',
+    qmin:400, qmax:1000, mesi:[5,6,7,8,9],
+    nota:'Il primo a uscire, con le prime piogge calde di tarda primavera/estate. Teme il freddo.' },
+  { id:'nero', nome:'Porcino nero', latNome:'Boletus aereus', icona:'🍄',
+    qmin:600, qmax:1000, mesi:[7,8,9,10],
+    nota:'Il più resistente a caldo e siccità, ama il caldo intenso di piena estate.' },
+  { id:'ovulo', nome:'Ovulo buono', latNome:'Amanita caesarea', icona:'🟠',
+    qmin:400, qmax:1000, mesi:[7,8,9,10,11],
+    nota:'Cerca radure soleggiate, non il sottobosco fitto.' },
+  { id:'comune', nome:'Porcino comune', latNome:'Boletus edulis', icona:'🍄',
+    qmin:1000, qmax:2100, mesi:[9,10,11],
+    nota:'Il più tardivo, zona faggio/pino laricio: ama il fresco in quota.' }
+];
+
+const FUNGHI_BADGE_LABEL = {
+  buone: '🟢 Condizioni buone', monitorare: '🟡 Da monitorare',
+  sfavorevoli: '🔴 Troppo secco', fuoristagione: '⚪ Fuori stagione'
+};
+
+async function fetchFunghiVersante(v){
+  const url = `https://api.open-meteo.com/v1/forecast`
+    + `?latitude=${v.lat}&longitude=${v.lng}`
+    + `&daily=precipitation_sum`
+    + `&past_days=14&forecast_days=1&timezone=Europe%2FRome`
+    + `&models=best_match,italia_meteo_arpae_icon_2i`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if(!r.ok) throw new Error('HTTP ' + r.status);
+  const d = await r.json();
+  const times = d.daily.time;
+  const pBest = d.daily.precipitation_sum_best_match || [];
+  const pI2i = d.daily.precipitation_sum_italia_meteo_arpae_icon_2i || [];
+  let accum14 = 0, giorniUltimaSignif = null;
+  const oggiIdx = times.length - 2; // past_days=14 + oggi + 1 forecast → oggi è il penultimo
+  for(let i=0; i<=oggiIdx; i++){
+    const val = Math.max(pBest[i]||0, pI2i[i]||0);
+    accum14 += val;
+    if(val >= 10) giorniUltimaSignif = oggiIdx - i;
+  }
+  return { accum14, giorniUltimaSignif };
+}
+
+function classificaFungo(specie, meseCorrente, cond){
+  if(!specie.mesi.includes(meseCorrente)) return 'fuoristagione';
+  if(cond.accum14 < 15) return 'sfavorevoli';
+  if(cond.giorniUltimaSignif !== null && cond.giorniUltimaSignif < 5) return 'monitorare';
+  if(cond.giorniUltimaSignif !== null && cond.giorniUltimaSignif >= 5 && cond.giorniUltimaSignif <= 18 && cond.accum14 >= 25) return 'buone';
+  return 'monitorare';
+}
+
+async function loadFunghi(){
+  const list = document.getElementById('funghi-list');
+  try{
+    const results = await Promise.all(FUNGHI_VERSANTI.map(v => fetchFunghiVersante(v).catch(()=>null)));
+    const meseCorrente = new Date().getMonth() + 1;
+    list.innerHTML = '';
+    FUNGHI_VERSANTI.forEach((v, vi) => {
+      const cond = results[vi];
+      const specieRilevanti = FUNGHI_SPECIE.filter(s => v.quota >= s.qmin - 150 && v.quota <= s.qmax + 150);
+      const vsnt = document.createElement('div');
+      vsnt.className = 'fng-vsnt' + (vi === 0 ? ' open' : '');
+      let cardsHtml = '';
+      if(!cond){
+        cardsHtml = `<div class="fng-card-note">⚠️ Dati non disponibili per questo versante.</div>`;
+      } else {
+        specieRilevanti.forEach(s => {
+          const stato = classificaFungo(s, meseCorrente, cond);
+          cardsHtml += `
+            <div class="fng-card ${stato==='fuoristagione'?'fuoristagione':''}">
+              <div class="fng-card-row">
+                <div>
+                  <div class="fng-card-name">${s.icona} ${s.nome}</div>
+                  <div class="fng-card-lat">${s.latNome}</div>
+                </div>
+                <span class="fng-badge ${stato}">${FUNGHI_BADGE_LABEL[stato]}</span>
+              </div>
+              <div class="fng-card-note">${s.nota}</div>
+              <div class="fng-card-detail">Accumulo 14gg: ${cond.accum14.toFixed(0)}mm${cond.giorniUltimaSignif!==null ? ' · ultima pioggia significativa '+cond.giorniUltimaSignif+'g fa' : ''}</div>
+            </div>`;
+        });
+      }
+      vsnt.innerHTML = `
+        <div class="fng-vsnt-hdr" onclick="this.parentElement.classList.toggle('open')">
+          <div>
+            <div class="fng-vsnt-name">${v.nome}</div>
+            <div class="fng-vsnt-sub">${v.quota}m · ${v.bosco}</div>
+          </div>
+          <span class="fng-vsnt-chev">▶</span>
+        </div>
+        <div class="fng-vsnt-body">${cardsHtml}</div>`;
+      list.appendChild(vsnt);
+    });
+    document.getElementById('funghi-updated').innerHTML =
+      `Aggiornato: ${new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})} · Open-Meteo (best_match + <a href="https://open-meteo.com/en/docs/italia-meteo-arpae-api" target="_blank" rel="noopener">ARPAE ICON-2I</a>)`;
+  }catch(e){
+    console.warn('[Funghi]', e);
+    list.innerHTML = `<div class="fng-error">⚠️ Dati non disponibili. <a href="#" onclick="loadFunghi();return false">Riprova</a></div>`;
+  }
+}
+setInterval(loadFunghi, 30*60*1000); // aggiornamento ogni 30 minuti
+
+// ══════════════════════════════════════════════
 // BLITZORTUNG + LIGHTNING
 // ══════════════════════════════════════════════
 let lMrks=[], lLog=[], strkCount=0, bzConn=false, simT=null;
@@ -1327,6 +1494,7 @@ document.addEventListener('visibilitychange', ()=>{
   await initRV();
   await fetchWx();
   initBz();
+  loadFunghi(); // indipendente da radar/meteo/posizione: niente await, non blocca il resto
   // Chiedi posizione all'avvio (dopo 1 sec per non bloccare il caricamento)
   setTimeout(requestGeolocation, 1000);
 })();
