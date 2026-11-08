@@ -815,9 +815,15 @@ map.getPane('base').style.zIndex = 150;
 
 const TRANSPARENT_TILE='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-  attribution:'©<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · Radar: <a href="https://radar.protezionecivile.it/">Protezione Civile</a>',
-  subdomains:'abc',maxZoom:19,pane:'base',
+// ⚠ "tile.openstreetmap.org" risponde 403 ("tile usage policy") quando
+//   usato da siti di terzi, come già verificato su Riposto Guide e
+//   Giarre. Sostituito con CARTO Voyager (richiede una chiave gratuita,
+//   carto.com/basemaps/apikey, 5 milioni di tile/mese). Il filtro CSS
+//   "dark" sopra (.leaflet-base-pane) resta invariato: si applica al
+//   pannello, non alla fonte delle tile.
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_54v5_1_ce6f639e845b860ae79e28d8',{
+  attribution:'©<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a> · Radar: <a href="https://radar.protezionecivile.it/">Protezione Civile</a>',
+  subdomains:'abcd',maxZoom:19,pane:'base',
   errorTileUrl:TRANSPARENT_TILE
 }).addTo(map);
 
