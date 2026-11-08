@@ -803,8 +803,14 @@ async function initRV(retryCount){
       document.getElementById('rv-dot').style.background='var(--yellow)';
       setTimeout(()=>initRV(retryCount+1), delay);
     } else {
-      document.getElementById('rts').textContent='RADAR: CONNESSIONE FALLITA';
+      // Non ci si arrende più del tutto: su rete mobile instabile (comune
+      // sulla costa) un fallimento temporaneo lasciava il radar fermo su
+      // "CONNESSIONE FALLITA" fino al prossimo ciclo di 5 minuti
+      // (setInterval(initRV,...) più sotto). Ora si continua a ritentare
+      // ogni 30s finché non torna a funzionare.
+      document.getElementById('rts').textContent='RADAR: nuovo tentativo tra 30s…';
       document.getElementById('rv-dot').style.background='#ff4444';
+      setTimeout(()=>initRV(retryCount), 30000);
     }
   }
 }
@@ -859,6 +865,30 @@ function stopAnim(){
 // OPEN-METEO
 // ══════════════════════════════════════════════
 let wxData=null, curWdir=0, curWspd=0;
+let icon2iData=null; // cache ultimo esito valido di fetchIcon2i(), per riuso nel fallback cache
+
+// ⚠ "best_match" per Riposto risolve al punto griglia più vicino a
+//   37.76259,15.1747 — alcuni km al largo rispetto alle coordinate reali
+//   (37.7285,15.2027), sul modello globale/blend a bassa risoluzione.
+//   Per un centro costiero sotto l'Etna questo può "lisciare" rovesci
+//   convettivi localizzati che lì non si formano o si formano diversi.
+//   ITALIA_METEO_ARPAE_ICON_2I (modello italiano ARPAE/ItaliaMeteo, 2 km,
+//   aggiornato ogni 12h) risolve invece a ~37.72,15.20, molto più vicino,
+//   e coglie meglio questi fenomeni locali — ma non fornisce
+//   precipitation_probability. Lo usiamo come segnale aggiuntivo di
+//   pioggia (precipitazione/weathercode), non al posto di best_match.
+async function fetchIcon2i(){
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast`+
+      `?latitude=${POS.lat}&longitude=${POS.lng}`+
+      `&hourly=precipitation,weathercode`+
+      `&forecast_days=3&timezone=Europe%2FRome&models=italia_meteo_arpae_icon_2i`;
+    const d=await(await fetch(url)).json();
+    return (d && d.hourly && d.hourly.time) ? d.hourly : null;
+  }catch(e){
+    return null; // best-effort: se non disponibile si ricade sul solo best_match
+  }
+}
 
 async function fetchWx(){
   try{
@@ -868,7 +898,9 @@ async function fetchWx(){
       `&hourly=precipitation,precipitation_probability,cloudcover,windspeed_10m,winddirection_10m,weathercode`+
       `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,winddirection_10m_dominant,sunrise,sunset,uv_index_max`+
       `&forecast_days=3&timezone=Europe%2FRome&models=best_match`;
-    wxData=await(await fetch(url)).json();
+    const [wxResp, i2i] = await Promise.all([ fetch(url).then(r=>r.json()), fetchIcon2i() ]);
+    wxData = wxResp;
+    if(i2i) icon2iData = i2i; // aggiorna la cache solo se la fetch è riuscita
     const c=wxData.current;
     curWdir=c.winddirection_10m; curWspd=c.windspeed_10m;
 
@@ -902,19 +934,37 @@ async function fetchWx(){
     const hProb = wxData.hourly.precipitation_probability;
     const hCodes = wxData.hourly.weathercode;
     const todayDateStr = hTimes.length ? hTimes[0].slice(0,10) : null; // hourly[0] = mezzanotte di oggi
-    let todayTotalPr = 0;
+
+    // Mappa oraria ICON-2I (per timestamp, non per indice: i due modelli
+    // potrebbero non restituire esattamente lo stesso numero di ore)
+    const i2iMap = {};
+    if(icon2iData && icon2iData.time){
+      for(let k=0;k<icon2iData.time.length;k++){
+        i2iMap[icon2iData.time[k]] = { pr: icon2iData.precipitation[k]||0, code: icon2iData.weathercode[k]||0 };
+      }
+    }
+
+    let todayTotalPr = 0, todayTotalPrI2i = 0;
     let nextRainHour = null, nextRainProb = 0;
     for(let i=0; i<hTimes.length; i++){
       if(hTimes[i].slice(0,10) !== todayDateStr) break; // oltre mezzanotte: giorno successivo
       const t = new Date(hTimes[i]);
+      const i2i = i2iMap[hTimes[i]];
+      const i2iRain = i2i ? (i2i.pr > 0.1 || i2i.code >= 61) : false;
       if(t <= nowTs){
         todayTotalPr += hPr[i] || 0; // ora già trascorsa (o quella in corso): conta nel totale
-      } else if(nextRainHour === null && (hPr[i] > 0.1 || hProb[i] > 30 || hCodes[i] >= 61)){
+        if(i2i) todayTotalPrI2i += i2i.pr || 0;
+      } else if(nextRainHour === null && (hPr[i] > 0.1 || hProb[i] > 30 || hCodes[i] >= 61 || i2iRain)){
         nextRainHour = t;
         nextRainProb = hProb[i];
       }
     }
-    document.getElementById('wx-pr').innerHTML=`${todayTotalPr.toFixed(1)}<span class="wunit">mm</span>`;
+    // "Precipit. oggi": il massimo tra best_match e ICON-2I (locale) — un
+    // rovescio isolato colto solo da uno dei due modelli non va perso
+    const todayTotal = Math.max(todayTotalPr, todayTotalPrI2i);
+    const wxPrEl=document.getElementById('wx-pr');
+    wxPrEl.innerHTML=`${todayTotal.toFixed(1)}<span class="wunit">mm</span>`;
+    wxPrEl.title = icon2iData ? 'Combinato Open-Meteo best_match + ARPAE ICON-2I (2 km)' : 'Open-Meteo best_match';
 
     // Banner: mostra condizione attuale + prossima pioggia se pertinente
     let bannerText = WMO[c.weathercode] || `Codice WMO ${c.weathercode}`;
@@ -951,7 +1001,7 @@ async function fetchWx(){
     }
 
     updateAlert(c.weathercode,c.precipitation);
-    updateFcDays(wxData);
+    updateFcDays(wxData,icon2iData);
 
     try{
       localStorage.setItem('mr_wx_cache', JSON.stringify({ data:wxData, ts:Date.now(), label:CUR_LABEL }));
@@ -981,7 +1031,7 @@ async function fetchWx(){
         document.getElementById('wind-main').textContent=`Vento da ${dText(c.winddirection_10m)}`;
         document.getElementById('wind-sub').textContent=`${Math.round(c.windspeed_10m)} km/h · ${Math.round(c.winddirection_10m)}°`;
         updateAlert(c.weathercode,c.precipitation);
-        updateFcDays(wxData);
+        updateFcDays(wxData,icon2iData);
         document.getElementById('wxbanner').textContent=`⚠ Dati non aggiornati (cache locale, ${ageMin} min fa) · ${cached.label}`;
         usedCache=true;
       }
@@ -1026,10 +1076,24 @@ function wmoIcon(code){
   return'☀';
 }
 
-function updateFcDays(d){
+function updateFcDays(d,icon2i){
   const cont=document.getElementById('fcdays');
   if(!d.daily){cont.innerHTML='<div style="font-size:9px;color:var(--text-dim)">Dati non disponibili</div>';return;}
   const {time,weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,winddirection_10m_dominant}=d.daily;
+
+  // Aggrega ICON-2I (2 km, locale) per giorno: coglie rovesci isolati che
+  // il modello globale best_match tende a lisciare/sottostimare su un
+  // tratto di costa come questo (vedi nota in fetchIcon2i)
+  const i2iDaily = {};
+  if(icon2i && icon2i.time){
+    for(let k=0;k<icon2i.time.length;k++){
+      const day = icon2i.time[k].slice(0,10);
+      if(!i2iDaily[day]) i2iDaily[day] = { pr:0, maxCode:0 };
+      i2iDaily[day].pr += icon2i.precipitation[k]||0;
+      i2iDaily[day].maxCode = Math.max(i2iDaily[day].maxCode, icon2i.weathercode[k]||0);
+    }
+  }
+
   // skip today (index 0), show tomorrow (1) and day after (2)
   const days=['Domani','Dopodomani'];
   cont.innerHTML='';
@@ -1037,7 +1101,12 @@ function updateFcDays(d){
     if(!time[i])continue;
     const code=weathercode[i]||0;
     const desc=WMO[code]||('Codice '+code);
-    const prob=precipitation_probability_max[i]||0;
+    let prob=precipitation_probability_max[i]||0;
+    const i2iDay = i2iDaily[time[i]];
+    // Se ICON-2I prevede un accumulo o un codice di pioggia quel giorno ma
+    // best_match segna probabilità quasi nulla, alziamo la soglia mostrata
+    // invece di nascondere del tutto il rischio di rovesci localizzati
+    if(i2iDay && (i2iDay.pr > 0.5 || i2iDay.maxCode >= 61)) prob = Math.max(prob, 30);
     const wspd=Math.round(windspeed_10m_max[i]||0);
     const wdir=dText(winddirection_10m_dominant[i]||0);
     const tmax=Math.round(temperature_2m_max[i]);
