@@ -540,6 +540,15 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   #pblbl{min-width:0;font-size:9px}
   #rts{bottom:calc(6px + 16px + env(safe-area-inset-bottom,0));left:6px}
   #funghi-grid-legend{bottom:calc(6px + 16px + 20px + env(safe-area-inset-bottom,0))}
+
+  /* #radar-legend resta centrato in alto per default e con #mctrl ora
+     in riga (vedi sopra) finisce sopra ai primi pulsanti. #mzoom è
+     nascosto su mobile: l'angolo in alto a sinistra è libero, ce lo
+     spostiamo lì invece di lasciarlo al centro. */
+  #radar-legend{
+    left:6px;top:6px;right:auto;transform:none;
+    max-width:44vw;min-width:0;
+  }
 }
 
 @media (max-width: 420px){
