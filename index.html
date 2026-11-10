@@ -290,10 +290,20 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   font-family:var(--font-d);font-size:10px;letter-spacing:.5px;padding:3px 7px;border-radius:2px;cursor:pointer;
 }
 .fgl-periods button.on{border-color:var(--amber);color:var(--amber);background:var(--amber-dim)}
-.fgl-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.fgl-item{display:flex;align-items:center;gap:3px}
-.fgl-sw{width:11px;height:11px;border-radius:2px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
-.fgl-item span{font-size:9px;color:var(--text-mid);white-space:nowrap}
+/* Scala compatta: una striscia di colori con i mm sotto */
+.fgl-strip{display:flex;width:100%;min-width:250px}
+.fgl-seg{flex:1;text-align:center}
+.fgl-seg i{display:block;height:8px;border-right:1px solid rgba(4,7,14,.6)}
+.fgl-seg:first-child i{border-radius:2px 0 0 2px}
+.fgl-seg:last-child i{border-radius:0 2px 2px 0;border-right:none}
+.fgl-seg span{display:block;font-size:8.5px;color:var(--text-mid);margin-top:2px;white-space:nowrap}
+.fgl-unit{font-size:8.5px;color:var(--text-dim);text-align:right;margin-top:1px}
+.fgl-info{background:none;border:1px solid var(--border);color:var(--text-mid);font-family:var(--font-d);font-size:10px;padding:1px 6px;border-radius:2px;cursor:pointer}
+.fgl-info[aria-expanded="true"]{color:var(--amber);border-color:var(--amber)}
+#fgl-more[hidden]{display:none}
+.fgl-btns{display:flex;gap:4px;flex-shrink:0}
+/* Etichette delle località sopra la griglia accumuli */
+.leaflet-labels-pane{pointer-events:none;filter:invert(1) hue-rotate(180deg) brightness(1.15)}
 .fgl-bar{height:7px;border-radius:2px;width:100%;min-width:200px;
   background:linear-gradient(90deg,#00faf5 0%,#00fa60 35%,#faeb00 60%,#fa8b00 80%,#e3193c 100%)}
 .fgl-barlbl{display:flex;justify-content:space-between;font-size:8.5px;color:var(--text-mid);margin-top:2px}
@@ -303,7 +313,21 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .fgl-status{margin-top:4px;font-size:9px;color:var(--cyan)}
 .fgl-status a{color:var(--amber)}
 @media (max-width:760px){
-  #funghi-grid-legend{bottom:calc(50px + env(safe-area-inset-bottom,0));padding:6px 8px 7px}
+  /* Telefono: legenda bassa e compatta, a tutta larghezza, sopra i
+     controlli del radar; le note si aprono solo con il tasto ⓘ */
+  #funghi-grid-legend{
+    left:6px;right:6px;transform:none;width:auto;max-width:none;
+    bottom:calc(8px + 18px + 30px + env(safe-area-inset-bottom,0));padding:5px 7px 6px;
+  }
+  .fgl-head{margin-bottom:4px}
+  .fgl-title{font-size:9px}
+  .fgl-periods{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-bottom:5px}
+  .fgl-periods::-webkit-scrollbar{display:none}
+  .fgl-periods button{flex-shrink:0;font-size:9.5px;padding:3px 6px}
+  .fgl-strip{min-width:0}
+  .fgl-seg span{font-size:7.5px}
+  .fgl-unit{display:none}
+  #mapc.acc-on #radar-legend{display:none}
 }
 
 /* ── RADAR TIMESTAMP / STATO ───────────────── */
@@ -604,7 +628,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
     <div class="sec">
       <div class="slabel">🍄 Funghi · Boschi di Sicilia</div>
       <div class="fng-note-top">Stima indicativa (non garanzia) · Riposto è costiera, qui non c'è bosco: i punti sono nei boschi dell'Etna e dei monti siciliani</div>
-      <button class="fng-maplink" onclick="openRainMap()">🗺️ Apri la mappa accumuli pioggia di tutta la Sicilia — più utile di queste card: mostra il dato grezzo (24h, 3–30 giorni, radar 24h) da interpretare con la tua esperienza del territorio</button>
+      <button class="fng-maplink" onclick="openRainMap()">🗺️ Apri la mappa accumuli pioggia di tutta la Sicilia — più utile di queste card: mostra il dato grezzo (24h, 3–21 giorni, radar 24h) da interpretare con la tua esperienza del territorio</button>
       <div id="funghi-list">
         <div class="shim" style="height:40px;margin-bottom:6px"></div>
         <div class="shim" style="height:40px"></div>
@@ -652,14 +676,19 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
     <div id="funghi-grid-legend" class="hidden">
       <div class="fgl-head">
         <div class="fgl-title" id="fgl-title">Accumulo pioggia · Sicilia · 14 giorni</div>
-        <button class="fgl-x" onclick="toggleFunghiGrid()" aria-label="Chiudi la mappa accumuli">✕</button>
+        <div class="fgl-btns">
+          <button class="fgl-info" id="fgl-info" aria-expanded="true" aria-controls="fgl-more" onclick="toggleRainInfo()" title="Note e filtro quota">ⓘ</button>
+          <button class="fgl-x" onclick="toggleFunghiGrid()" aria-label="Chiudi la mappa accumuli">✕</button>
+        </div>
       </div>
       <div class="fgl-periods" id="fgl-periods" role="group" aria-label="Periodo di accumulo">
-        <button data-p="1">24h</button><button data-p="3">3 gg</button><button data-p="7">7 gg</button><button data-p="14" class="on">14 gg</button><button data-p="21">21 gg</button><button data-p="30">30 gg</button><button data-p="radar" title="Pioggia stimata dal radar della Protezione Civile">📡 Radar 24h</button>
+        <button data-p="1">24h</button><button data-p="3">3 gg</button><button data-p="7">7 gg</button><button data-p="14" class="on">14 gg</button><button data-p="21">21 gg</button><button data-p="radar" title="Pioggia stimata dal radar della Protezione Civile">📡 Radar 24h</button>
       </div>
       <div id="fgl-scale"></div>
-      <label class="fgl-opt" id="fgl-opt"><input type="checkbox" id="fgl-bosco" checked onchange="renderRainGrid()"> Solo quote da bosco (250–2250 m)</label>
-      <div class="fgl-note" id="fgl-note"></div>
+      <div id="fgl-more">
+        <label class="fgl-opt" id="fgl-opt"><input type="checkbox" id="fgl-bosco" onchange="renderRainGrid()"> Mostra solo le quote da bosco (250–2250 m)</label>
+        <div class="fgl-note" id="fgl-note"></div>
+      </div>
       <div class="fgl-status" id="fgl-status"></div>
     </div>
 
