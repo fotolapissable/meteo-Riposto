@@ -301,6 +301,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .fgl-info{background:none;border:1px solid var(--border);color:var(--text-mid);font-family:var(--font-d);font-size:10px;padding:1px 6px;border-radius:2px;cursor:pointer}
 .fgl-info[aria-expanded="true"]{color:var(--amber);border-color:var(--amber)}
 #fgl-more[hidden]{display:none}
+.fgl-min{display:none;background:none;border:1px solid var(--border);color:var(--text-mid);font-family:var(--font-d);font-size:10px;padding:1px 6px;border-radius:2px;cursor:pointer}
 .fgl-btns{display:flex;gap:4px;flex-shrink:0}
 /* Etichette delle località sopra la griglia accumuli */
 .leaflet-labels-pane{pointer-events:none;filter:invert(1) hue-rotate(180deg) brightness(1.15)}
@@ -328,6 +329,12 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   .fgl-seg span{font-size:7.5px}
   .fgl-unit{display:none}
   #mapc.acc-on #radar-legend{display:none}
+
+  /* Pannello accumuli: su telefono parte compresso (solo titolo),
+     si espande al tocco della freccetta per non coprire la mappa */
+  .fgl-min{display:inline-block}
+  #funghi-grid-legend.collapsed #fgl-body{display:none}
+  #funghi-grid-legend.collapsed{padding-bottom:5px}
 }
 
 /* ── RADAR TIMESTAMP / STATO ───────────────── */
@@ -673,23 +680,26 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
       <div class="lg-src" id="lg-src">Radar-DPC · Protezione Civile</div>
     </div>
 
-    <div id="funghi-grid-legend" class="hidden">
+    <div id="funghi-grid-legend" class="hidden collapsed">
       <div class="fgl-head">
         <div class="fgl-title" id="fgl-title">Accumulo pioggia · Sicilia · 14 giorni</div>
         <div class="fgl-btns">
+          <button class="fgl-min" id="fgl-min" aria-expanded="false" aria-controls="fgl-body" onclick="toggleFunghiCollapse()" title="Comprimi/espandi pannello">⌄</button>
           <button class="fgl-info" id="fgl-info" aria-expanded="true" aria-controls="fgl-more" onclick="toggleRainInfo()" title="Note e filtro quota">ⓘ</button>
           <button class="fgl-x" onclick="toggleFunghiGrid()" aria-label="Chiudi la mappa accumuli">✕</button>
         </div>
       </div>
-      <div class="fgl-periods" id="fgl-periods" role="group" aria-label="Periodo di accumulo">
-        <button data-p="1">24h</button><button data-p="3">3 gg</button><button data-p="7">7 gg</button><button data-p="14" class="on">14 gg</button><button data-p="21">21 gg</button><button data-p="radar" title="Pioggia stimata dal radar della Protezione Civile">📡 Radar 24h</button>
+      <div id="fgl-body">
+        <div class="fgl-periods" id="fgl-periods" role="group" aria-label="Periodo di accumulo">
+          <button data-p="1">24h</button><button data-p="3">3 gg</button><button data-p="7">7 gg</button><button data-p="14" class="on">14 gg</button><button data-p="21">21 gg</button><button data-p="radar" title="Pioggia stimata dal radar della Protezione Civile">📡 Radar 24h</button>
+        </div>
+        <div id="fgl-scale"></div>
+        <div id="fgl-more">
+          <label class="fgl-opt" id="fgl-opt"><input type="checkbox" id="fgl-bosco" onchange="renderRainGrid()"> Mostra solo le quote da bosco (250–2250 m)</label>
+          <div class="fgl-note" id="fgl-note"></div>
+        </div>
+        <div class="fgl-status" id="fgl-status"></div>
       </div>
-      <div id="fgl-scale"></div>
-      <div id="fgl-more">
-        <label class="fgl-opt" id="fgl-opt"><input type="checkbox" id="fgl-bosco" onchange="renderRainGrid()"> Mostra solo le quote da bosco (250–2250 m)</label>
-        <div class="fgl-note" id="fgl-note"></div>
-      </div>
-      <div class="fgl-status" id="fgl-status"></div>
     </div>
 
     <div id="rts">RADAR DPC: caricamento…</div>
@@ -703,6 +713,17 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   </div>
 </div><!-- /main -->
 
+<script>
+// Comprime/espande il pannello accumuli pioggia su mobile (solo CSS <=760px:
+// su desktop la classe "collapsed" non ha effetto, il pannello resta invariato)
+function toggleFunghiCollapse(){
+  var panel = document.getElementById('funghi-grid-legend');
+  var btn = document.getElementById('fgl-min');
+  var collapsed = panel.classList.toggle('collapsed');
+  btn.setAttribute('aria-expanded', String(!collapsed));
+  btn.textContent = collapsed ? '⌄' : '⌃';
+}
+</script>
 <script src="app.js"></script>
 
 <!-- ══ BRANDING FOOTER ══════════════════════════════════════ -->
