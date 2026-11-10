@@ -525,6 +525,23 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   #rts{bottom:calc(8px + 18px + env(safe-area-inset-bottom,0));left:8px;font-size:9px;max-width:calc(100% - 190px)}
 }
 
+/* Telefono in landscape fisso (larghezza "mobile" ma altezza molto ridotta):
+   la colonna di 6 pulsanti di #mctrl, scendendo dall'alto, può arrivare a
+   toccare #pbbar ("LIVE"), ancorato in basso allo stesso lato. La forziamo
+   in riga (va a capo invece di impilarsi) così resta bassa in ogni caso,
+   indipendentemente dall'altezza esatta dello schermo. */
+@media (max-width:760px) and (max-height:480px){
+  #mctrl{
+    flex-direction:row;flex-wrap:wrap;justify-content:flex-end;
+    max-width:68%;top:6px;right:6px;
+  }
+  .mbtn{padding:4px 6px;font-size:8.5px;letter-spacing:.5px}
+  #pbbar{bottom:calc(6px + 16px + env(safe-area-inset-bottom,0));right:6px;padding:3px 6px}
+  #pblbl{min-width:0;font-size:9px}
+  #rts{bottom:calc(6px + 16px + env(safe-area-inset-bottom,0));left:6px}
+  #funghi-grid-legend{bottom:calc(6px + 16px + 20px + env(safe-area-inset-bottom,0))}
+}
+
 @media (max-width: 420px){
   .wgrid{grid-template-columns:1fr 1fr}
   #hdr-title{font-size:10px;letter-spacing:1.5px}
