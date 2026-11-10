@@ -5,14 +5,16 @@
 //    il refresh automatico su tutti i dispositivi.
 // ═══════════════════════════════════════════════════════
 
-const APP_VERSION = 'v9';
+const APP_VERSION = 'v10';
 const CACHE_NAME  = `meteo-riposto-${APP_VERSION}`;
 const TILE_CACHE_NAME = `meteo-riposto-tiles-${APP_VERSION}`;
-const TILE_CACHE_MAX  = 300; // limite entry per non far crescere la cache all'infinito
+const TILE_CACHE_MAX  = 600; // limite entry per non far crescere la cache all'infinito
 
 // Risorse statiche da cachare all'installazione
 const STATIC_ASSETS = [
   './index.html',
+  './app.js',
+  './pwa.js',
   './guida.html',
   './manifest.json',
   './icons/icon-192.png',
@@ -67,7 +69,9 @@ self.addEventListener('fetch', event => {
   // mostra l'ultimo dato scaricato invece di restare vuota.
   const isMapTile =
     url.hostname.includes('radar-geowebcache.protezionecivile.it') ||
-    url.hostname.includes('tile.openstreetmap.org');
+    url.hostname.includes('tile.openstreetmap.org') ||
+    url.hostname.includes('basemaps.cartocdn.com') ||
+    url.hostname.includes('tilecache.rainviewer.com');
 
   if (isMapTile) {
     event.respondWith(
@@ -93,7 +97,8 @@ self.addEventListener('fetch', event => {
   const isLiveApi =
     url.hostname.includes('open-meteo.com') ||
     url.hostname === 'radar-api.protezionecivile.it' ||
-    url.hostname.includes('blitzortung.org');
+    url.hostname.includes('blitzortung.org') ||
+    url.hostname === 'api.rainviewer.com';
 
   if (isLiveApi) {
     event.respondWith(
@@ -103,7 +108,8 @@ self.addEventListener('fetch', event => {
   }
 
   // index.html: network-first così gli aggiornamenti arrivano subito
-  if (url.pathname.endsWith('/') || url.pathname.endsWith('index.html')) {
+  // app.js/pwa.js: network-first come l'HTML, così un aggiornamento arriva subito
+  if (url.pathname.endsWith('/') || url.pathname.endsWith('.html') || url.pathname.endsWith('app.js') || url.pathname.endsWith('pwa.js')) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
