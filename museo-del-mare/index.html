@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><script src="/analytics.js" data-id="G-NN6FP74TCW" data-app="museo-del-mare" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Museo Diffuso del Mare</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E2436">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Museo del Mare">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --navy:#0E2436;
+    --cream:#F2ECDD;
+    --paper:#EDE6D6;
+    --orange:#C8813A;
+    --orange2:#C97A45;
+    --grayblue:#8FA5B6;
+    --blue:#6FA8BF;
+    --serif:'Lora', Georgia, serif;
+    --sans:'Inter', 'Helvetica Neue', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--cream);font-family:var(--sans);}
+  .phone{max-width:430px;margin:0 auto;min-height:100vh;position:relative;}
+
+  .install-banner{
+    display:none;align-items:center;gap:10px;background:rgba(200,129,58,0.15);
+    border:1px solid rgba(200,129,58,0.45);border-radius:12px;padding:12px 14px;margin:14px 20px 0;
+    font-size:12.5px;line-height:1.5;
+  }
+  .install-banner.show{display:flex;}
+  .install-banner .txt{flex:1;}
+  .install-banner button{
+    flex:none;background:var(--orange);color:var(--navy);border:none;border-radius:8px;
+    padding:8px 12px;font-family:var(--sans);font-weight:700;font-size:12px;cursor:pointer;
+  }
+  .install-x{background:none;border:none;color:var(--grayblue);font-size:16px;cursor:pointer;padding:0 2px;}
+
+  .tip-banner{
+    display:none;align-items:center;gap:10px;background:var(--paper);color:var(--navy);
+    border-radius:12px;padding:13px 14px;margin:14px 20px 0;font-size:12.5px;line-height:1.5;
+  }
+  .tip-banner.show{display:flex;}
+  .tip-banner .txt{flex:1;}
+  .tip-banner button{
+    flex:none;background:var(--navy);color:var(--cream);border:none;border-radius:8px;
+    padding:8px 12px;font-family:var(--sans);font-weight:700;font-size:12px;cursor:pointer;
+  }
+
+  header.hero{padding:28px 20px 22px;border-bottom:1px solid rgba(200,129,58,0.35);}
+  .hero-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+  .brandmark{display:flex;align-items:center;gap:8px;font-family:'DejaVu Sans Mono','Courier New',monospace;
+    font-size:10px;letter-spacing:1.2px;color:var(--orange);}
+  .brandmark .dot{width:7px;height:7px;border-radius:50%;background:var(--orange);}
+  .lang{display:flex;border:1px solid var(--grayblue);border-radius:20px;overflow:hidden;}
+  .lang button{background:none;border:none;color:var(--grayblue);font-family:var(--sans);font-size:12px;font-weight:600;padding:6px 12px;cursor:pointer;}
+  .lang button.active{background:var(--orange);color:var(--navy);}
+
+  h1.title{font-family:var(--serif);font-weight:700;font-size:38px;line-height:1.08;margin:0 0 10px;}
+  .subtitle{color:var(--blue);font-size:14.5px;line-height:1.5;margin:0 0 18px;max-width:340px;}
+  .hero-cta{display:flex;gap:10px;flex-wrap:wrap;}
+  .hero-news{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(200,129,58,0.15);border:1px solid rgba(200,129,58,0.45);
+    color:var(--orange);font-size:11.5px;font-weight:600;
+    border-radius:20px;padding:6px 12px;margin-bottom:14px;
+    text-decoration:none;cursor:pointer;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--sans);font-weight:600;font-size:13.5px;
+    padding:11px 18px;border-radius:10px;text-decoration:none;cursor:pointer;border:none;
+  }
+  .btn-primary{background:var(--orange);color:var(--navy);}
+  .btn-ghost{background:transparent;color:var(--cream);border:1px solid rgba(242,236,221,0.35);}
+
+  nav.tabs{
+    display:flex;overflow-x:auto;gap:4px;padding:10px 14px;
+    background:rgba(255,255,255,0.02);position:sticky;top:29px;z-index:40;
+    border-bottom:1px solid rgba(200,129,58,0.25);
+  }
+  nav.tabs::-webkit-scrollbar{display:none;}
+  nav.tabs button{
+    flex:none;background:none;border:none;color:var(--grayblue);
+    font-family:var(--sans);font-weight:600;font-size:12.5px;
+    padding:8px 13px;border-radius:20px;cursor:pointer;white-space:nowrap;
+  }
+  nav.tabs button.active{background:var(--orange);color:var(--navy);}
+
+  section{padding:26px 20px 8px;display:none;}
+  section.active{display:block;}
+  .section-label{
+    font-family:'DejaVu Sans Mono','Courier New',monospace;font-size:10.5px;
+    letter-spacing:1.4px;color:var(--orange);margin-bottom:6px;
+  }
+  h2.section-title{font-family:var(--serif);font-size:23px;font-weight:700;margin:0 0 6px;}
+  .section-intro{color:var(--grayblue);font-size:13.5px;line-height:1.55;margin:0 0 20px;}
+
+  /* percorso */
+  .steps{display:flex;flex-direction:column;gap:0;margin-bottom:6px;}
+  .step{display:flex;gap:14px;position:relative;padding-bottom:26px;}
+  .step:last-child{padding-bottom:4px;}
+  .step-line{position:absolute;left:15px;top:32px;bottom:0;width:1px;background:rgba(143,165,182,0.35);}
+  .step:last-child .step-line{display:none;}
+  .step-dot{
+    width:32px;height:32px;border-radius:50%;background:var(--paper);color:var(--navy);
+    display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;z-index:1;
+  }
+  .step-body b{display:block;font-size:14.5px;margin-bottom:2px;}
+  .step-body span{font-size:12.5px;color:var(--grayblue);}
+
+  /* cards */
+  .card{
+    background:rgba(242,236,221,0.05);border:1px solid rgba(143,165,182,0.25);
+    border-radius:14px;padding:16px 16px 15px;margin-bottom:12px;
+  }
+  .card-top{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .card-icon{
+    width:40px;height:40px;border-radius:50%;background:var(--paper);
+    display:flex;align-items:center;justify-content:center;font-size:19px;flex:none;
+  }
+  .card-name{font-family:var(--serif);font-weight:700;font-size:16.5px;margin:0;}
+  .card-meta{font-size:11.5px;color:var(--blue);margin:1px 0 0;}
+  .card-desc{font-size:13px;line-height:1.55;color:var(--cream);opacity:0.92;margin:0 0 10px;}
+  .card-link{font-size:12.5px;font-weight:600;color:var(--orange);text-decoration:none;}
+  .card-link.disabled{color:var(--grayblue);pointer-events:none;}
+  .badge-soon{
+    font-family:'DejaVu Sans Mono','Courier New',monospace;font-size:9.5px;letter-spacing:0.6px;
+    color:var(--grayblue);border:1px solid var(--grayblue);border-radius:10px;padding:2px 7px;margin-left:8px;
+  }
+
+  .wa-box{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:rgba(200,129,58,0.12);border:1px solid rgba(200,129,58,0.4);
+    border-radius:14px;padding:15px 16px;margin-top:6px;
+  }
+  .wa-box b{font-size:13.5px;display:block;}
+  .wa-box span{font-size:12px;color:var(--grayblue);}
+
+  .event-card{
+    background:var(--paper);color:var(--navy);border-radius:16px;padding:20px;margin-bottom:16px;
+  }
+  .event-card .when{font-family:'DejaVu Sans Mono','Courier New',monospace;font-size:11px;letter-spacing:1px;color:var(--orange2);}
+  .event-card h3{font-family:var(--serif);font-size:20px;margin:6px 0 8px;}
+  .event-card p{font-size:13px;line-height:1.55;margin:0;}
+
+  footer{padding:30px 20px 40px;text-align:center;}
+  footer p{font-size:10.5px;color:var(--grayblue);line-height:1.7;margin:0;}
+  footer .credit-line{font-style:italic;}
+  footer a{color:var(--orange);text-decoration:none;font-weight:600;}
+  .divider{height:1px;background:rgba(200,129,58,0.3);margin:22px 0;}
+
+  #map, #map-porto, #map-giusy{
+    width:100%;height:460px;border-radius:14px;overflow:hidden;
+    border:1px solid rgba(143,165,182,0.3);margin-bottom:12px;
+  }
+  .leaflet-popup-content-wrapper{background:var(--navy);color:var(--cream);border-radius:10px;}
+  .leaflet-popup-tip{background:var(--navy);}
+  .leaflet-control-attribution{font-size:9px;}
+  .leaflet-popup-content{margin:10px 12px;font-family:var(--sans);}
+  .leaflet-popup-content b{font-family:var(--serif);display:block;font-size:14px;margin-bottom:3px;}
+  .leaflet-popup-content a{color:var(--orange);font-size:12px;font-weight:600;text-decoration:none;}
+  .mk-stop{
+    width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,0.4);border:2px solid var(--navy);
+  }
+  .mk-fish{background:var(--paper);color:var(--navy);font-family:var(--sans);font-weight:700;font-size:12px;}
+  .mk-storia{background:var(--blue);}
+  .mk-anchor{background:var(--orange);}
+  .mk-evento{background:var(--orange2);}
+  .map-legend{display:flex;flex-wrap:wrap;gap:12px;margin:2px 0 18px;font-size:11px;color:var(--grayblue);}
+  .map-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .map-legend i{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .note-box{
+    background:rgba(143,165,182,0.1);border:1px solid rgba(143,165,182,0.3);
+    border-radius:10px;padding:11px 13px;font-size:11.5px;line-height:1.5;color:var(--grayblue);margin-bottom:16px;
+  }
+  .map-wrap{position:relative;}
+  .locate-btn{
+    display:flex;align-items:center;justify-content:center;gap:6px;width:100%;
+    background:var(--navy);color:var(--cream);border:1px solid var(--orange);
+    border-radius:10px;padding:11px 14px;font-family:var(--sans);font-weight:600;font-size:13px;
+    cursor:pointer;margin:10px 0 14px;
+  }
+  .locate-btn.loading{opacity:0.6;}
+  .user-mk{
+    width:16px;height:16px;border-radius:50%;background:#3B82F6;border:3px solid #fff;
+    box-shadow:0 0 0 5px rgba(59,130,246,0.35);
+  }
+  .nearest-box{
+    display:none;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.4);
+    border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.5;margin-bottom:16px;
+  }
+  .nearest-box.show{display:block;}
+  .nearest-box b{color:#8ab4f8;}
+  .nearest-box a{color:var(--orange);font-weight:600;text-decoration:none;}
+  .locate-btn.on{background:var(--orange);color:var(--navy);}
+  .btn-row{display:flex;gap:8px;}
+  .btn-row .locate-btn{flex:1;padding:11px 8px;}
+  .astro{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px;}
+  .astro-card{background:rgba(242,236,221,0.05);border:1px solid rgba(143,165,182,0.25);border-radius:12px;padding:12px 13px;}
+  .astro-card .lab{font-family:'DejaVu Sans Mono','Courier New',monospace;font-size:9.5px;letter-spacing:1.2px;color:var(--orange);margin-bottom:6px;}
+  .astro-card .row{display:flex;justify-content:space-between;font-size:12.5px;line-height:1.7;}
+  .astro-card .row span{color:var(--grayblue);}
+  .astro-card .fase{font-size:11.5px;color:var(--blue);margin-top:4px;}
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <div class="tip-banner" id="tip-banner">
+    <div class="txt" data-en="🌊 Welcome! For now the route is virtual: tap a stop on the map to read its card, or turn on &quot;Alert me at each stop&quot; while you walk along the seafront.">🌊 Benvenuto! Il percorso per ora è virtuale: tocca una tappa sulla mappa per leggere la scheda, oppure attiva "Avvisami alle tappe" mentre cammini sul lungomare.</div>
+    <button onclick="closeTip()" data-en="Got it">Ho capito</button>
+  </div>
+
+  <div class="install-banner" id="install-banner">
+    <div class="txt" id="install-text">📲 Aggiungi questa app alla schermata Home per aprirla più velocemente.</div>
+    <button id="install-btn" onclick="doInstall()" data-en="Install">Installa</button>
+    <button class="install-x" onclick="dismissInstall()">✕</button>
+  </div>
+
+  <header class="hero">
+    <div class="hero-top">
+      <div class="brandmark"><span class="dot"></span>MUSEO DIFFUSO DEL MARE</div>
+      <div class="lang"><button id="lang-it" onclick="setLang('it')">IT</button><button id="lang-en" onclick="setLang('en')">EN</button></div>
+    </div>
+    <a href="#" class="hero-news" onclick="showTab('evento');return false;" data-en="🎉 29 Oct 2026 — Riposto è Mare is born →">🎉 29 ott 2026 — Nasce Riposto è Mare →</a>
+    <h1 class="title" data-en="The sea of Riposto,<br>one stop at a time.">Il mare di<br>Riposto, raccontato.</h1>
+    <p class="subtitle" data-en="A permanent nature and heritage trail along the Ionian coast below Mount Etna, between the harbour of Riposto and Torre Archirafi.">Un percorso naturalistico-educativo permanente lungo il litorale jonico etneo, tra il porto e il belvedere di Torre Archirafi.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" onclick="showTab('percorso')" data-en="Explore the route">Scopri il percorso</button>
+      <button class="btn btn-ghost" onclick="showTab('evento')" data-en="Who we are &amp; how to join">Chi siamo e come aderire</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="percorso" class="active" onclick="showTab('percorso')" data-en="Route">Percorso</button>
+    <button data-tab="specie" onclick="showTab('specie')" data-en="Species">Le Specie</button>
+    <button data-tab="storia" onclick="showTab('storia')" data-en="History">La Storia</button>
+    <button data-tab="pescatori" onclick="showTab('pescatori')" data-en="Fishermen">I Pescatori</button>
+    <button data-tab="evento" onclick="showTab('evento')" data-en="Association">Associazione</button>
+  </nav>
+
+  <!-- PERCORSO -->
+  <section id="percorso" class="active">
+    <div class="section-label" data-en="THE OPEN-AIR MUSEUM">IL MUSEO DIFFUSO</div>
+    <h2 class="section-title" data-en="A museum without walls">Un museo senza muri</h2>
+    <p class="section-intro" data-en="No opening hours, no tickets: the seafront itself is the museum. Fifteen stops, one every 140 metres or so, from the Riposto seafront to the pier of Torre Archirafi.">Non ha orari né biglietti: è il lungomare stesso a diventare museo. Quindici tappe, una ogni 140 metri circa, dal lungomare di Riposto fino al molo di Torre Archirafi.</p>
+    <div class="note-box" style="margin-top:-8px;" data-en="🧭 <b style=&quot;color:var(--cream);&quot;>For now the route is virtual.</b> The panels along the seafront have not been installed yet: meanwhile every stop is already here on the map, with its card. Tap a number to open it.">🧭 <b style="color:var(--cream);">Per ora il percorso è virtuale.</b> I pannelli sul lungomare sono ancora da realizzare: intanto ogni tappa è già qui sulla mappa, con la sua scheda. Tocca un numero per aprirla.</div>
+
+    <div class="map-wrap">
+      <div id="map"></div>
+    </div>
+    <div class="btn-row">
+      <button class="locate-btn" id="locate-btn" onclick="locateMe()">📍 La mia posizione</button>
+      <button class="locate-btn" id="avvisi-btn" onclick="toggleAvvisi()">🔔 Avvisami alle tappe</button>
+    </div>
+    <div class="nearest-box" id="nearest-box"></div>
+    <div class="map-legend">
+      <span data-en="<i style=&quot;background:var(--orange)&quot;></i>Start"><i style="background:var(--orange)"></i>Partenza</span>
+      <span data-en="<i style=&quot;background:var(--paper)&quot;></i>Species"><i style="background:var(--paper)"></i>Specie</span>
+      <span data-en="<i style=&quot;background:var(--blue)&quot;></i>Historic route"><i style="background:var(--blue)"></i>Percorso storico</span>
+      <span data-en="<i style=&quot;background:var(--orange2)&quot;></i>Torre Archirafi pier (finish)"><i style="background:var(--orange2)"></i>Molo di Torre Archirafi (arrivo)</span>
+    </div>
+
+    <div class="astro" id="astro"></div>
+
+    <div class="wa-box" style="margin:0 0 18px;">
+      <div><b data-en="How would you like the seafront?">Come vorresti il lungomare?</b><span data-en="Tell us in two minutes. Anonymous, in Italian.">Dillo in due minuti, è anonimo.</span></div>
+      <a class="btn btn-primary" style="padding:9px 14px;font-size:12.5px;white-space:nowrap;" href="https://forms.gle/eZYt3U1odujGpnPP7" target="_blank" rel="noopener" data-en="Have your say">Di’ la tua</a>
+    </div>
+
+    <div class="note-box" data-en="📍 The blue marker shows where Giusy Bonaccorsi's Historic Route reaches the seafront. The route itself, with its 4 stops from the Sanctuary of the Sacra Lettera through the old town, is mapped below in the 'Historic Route' section.">📍 Il marker blu segna il punto dove il Percorso Storico di Giusy Bonaccorsi raggiunge il lungomare. Il percorso completo, con le sue 4 tappe dal Santuario della Sacra Lettera nel centro antico, è sulla mappa qui sotto, nella sezione "Percorso Storico".</div>
+
+    <div class="steps" id="steps-list"></div>
+  </section>
+
+  <!-- SPECIE -->
+  <section id="specie">
+    <div class="section-label" data-en="THE FIFTEEN SPECIES">LE QUINDICI SPECIE</div>
+    <h2 class="section-title" data-en="Who lives in this sea">Chi vive in questo mare</h2>
+    <p class="section-intro" data-en="Fifteen species of this stretch of the Ionian coast, from the rocks close to shore to the open sea and the deep seabed, told through science and through the voice of the fishermen of Riposto. Each one also carries its name in the local Sicilian dialect.">Quindici specie del litorale jonico etneo, dagli scogli sotto costa al mare aperto e ai fondali profondi, raccontate con la scienza e con la voce dei pescatori di Riposto.</p>
+    <div id="specie-list"></div>
+  </section>
+
+  <!-- STORIA -->
+  <section id="storia">
+    <div class="section-label" data-en="THE HISTORIC ROUTE">IL PERCORSO STORICO</div>
+    <h2 class="section-title" data-en="Four stops through the old town">Quattro tappe nel centro antico</h2>
+    <p class="section-intro" data-en="From the Sanctuary of the Sacra Lettera to Largo Bagni, through Riposto's old town — curated by Giusy Bonaccorsi.">Dal Santuario della Sacra Lettera a Largo Bagni, nel centro antico di Riposto — a cura di Giusy Bonaccorsi.</p>
+
+    <div class="map-wrap">
+      <div id="map-giusy"></div>
+    </div>
+    <div class="steps" id="steps-giusy"></div>
+    <div class="note-box" data-en="📍 The four real stops of Giusy Bonaccorsi's Historic Route, from the Sanctuary of the Sacra Lettera to Largo Bagni, in Riposto's old town — from her degree thesis (Genoa, 2025). <a href=&quot;https://titanium-memory-f5d.notion.site/RIPOSTO-39baf2a3c03280898d84f86fc7ea8a7b&quot; target=&quot;_blank&quot; style=&quot;color:var(--orange);font-weight:600;&quot;>Full text on Notion →</a>">📍 Le quattro tappe reali del Percorso Storico di Giusy Bonaccorsi, dal Santuario della Sacra Lettera a Largo Bagni, nel centro antico di Riposto — dalla sua tesi di laurea (Genova, 2025). <a href="https://titanium-memory-f5d.notion.site/RIPOSTO-39baf2a3c03280898d84f86fc7ea8a7b" target="_blank" style="color:var(--orange);font-weight:600;">Testo completo su Notion →</a></div>
+
+    <div class="section-label" data-en="THE ANCIENT HARBOUR OF MASCALI">IL PORTO ANTICO DI MASCALI</div>
+    <h2 class="section-title" data-en="Millennia of history">Millenni di storia</h2>
+    <p class="section-intro" data-en="From the mountain to the sea: six stops in the ancient river port and shipyard of Mascali, told by architect Santa Sorbello.">Dal monte al mare: sei tappe nell’antico porto fluviale e cantieristico di Mascali, raccontato dall’arch. Santa Sorbello.</p>
+    <div class="map-wrap">
+      <div id="map-porto"></div>
+    </div>
+    <div class="steps" id="steps-porto"></div>
+        <div class="note-box" data-en="📍 The Malogrado towers no longer stand: their bases are still visible, on private land and not accessible. The map shows their presumed location. Texts from the material of architect Santa Sorbello.">📍 Le torri di Malogrado non sono più in piedi: restano visibili i basamenti, in terreni privati e non accessibili. Sulla mappa è indicata la posizione presunta. Testi dal materiale dell’arch. Santa Sorbello.</div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon">🗼</div>
+        <div><p class="card-name" data-en="Coastal defence system">Sistema difensivo costiero</p><p class="card-meta">Arch. Santa Sorbello</p></div>
+      </div>
+      <p class="card-desc" data-en="The watchtowers of the County of Mascali/Riposto from the 12th to the 20th century, by architect Santa Sorbello, formerly of the Catania Heritage Office (Soprintendenza per i Beni Culturali e Ambientali).">Le torri di guardia della Contea di Mascali/Riposto dal XII al XX secolo, a cura dell'arch. Santa Sorbello, già Soprintendenza per i Beni Culturali e Ambientali di Catania.</p>
+      <a class="card-link" href="https://debonair-stilton-413.notion.site/3a384f34c2198159a70be8a3bf150d71" target="_blank" data-en="Read the full card (in Italian) →">Scopri la scheda →</a>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon">⚒️</div>
+        <div><p class="card-name" data-en="Entrepreneurs">Imprenditori</p><p class="card-meta" data-en="Shipyards, shipowners, wine and barrels">Cantieri, armatori, vino e botti</p></div>
+      </div>
+      <p class="card-desc" data-en="Between the 19th and 20th centuries the harbour of Riposto was home to shipyards and shipping companies — and shipped Etna wine across the Mediterranean.">Tra Otto e Novecento il porto di Riposto ospitava cantieri navali e compagnie di navigazione — e imbarcava il vino etneo verso il resto del Mediterraneo.</p>
+      <a class="card-link" href="https://debonair-stilton-413.notion.site/3a384f34c21981c6bdeeed4d5581b0f7" target="_blank" data-en="Read the full card (in Italian) →">Scopri la scheda →</a>
+    </div>
+  </section>
+
+  <!-- PESCATORI -->
+  <section id="pescatori">
+    <div class="section-label" data-en="THE FISHERMEN'S VOICE">LA VOCE DEI PESCATORI</div>
+    <h2 class="section-title" data-en="Those who live the sea every day">Chi il mare lo vive ogni giorno</h2>
+    <p class="section-intro" data-en="The museum also grows thanks to the fishermen of Riposto, who share their own photos — boats, nets, the catch, life on board, and old black-and-white pictures too.">Il museo cresce anche grazie ai pescatori di Riposto, che condividono le proprie foto — barche, reti, pescato, momenti di vita di bordo, anche scatti d'epoca in bianco e nero.</p>
+
+    <div class="card">
+      <div class="card-top">
+        <div class="card-icon">📸</div>
+        <div><p class="card-name" data-en="The Fishermen Tell">I Pescatori Raccontano</p><p class="card-meta" data-en="A collective gallery, with no individual names">Galleria collettiva, senza nomi individuali</p></div>
+      </div>
+      <p class="card-desc" data-en="A collection of real images of fishing in Riposto, telling the everyday trade — not an archive of personal memories, but a collective portrait.">Una raccolta di immagini vere della pesca a Riposto, per raccontare il mestiere di ogni giorno — non un archivio di ricordi personali, ma un ritratto collettivo.</p>
+      <a class="card-link" href="https://debonair-stilton-413.notion.site/I-Pescatori-Raccontano-39784f34c2198198be10f22f1ca73dd2" target="_blank" data-en="See the gallery →">Guarda la galleria →</a>
+    </div>
+
+    <div class="wa-box">
+      <div><b data-en="Do you have a photo to share?">Hai una foto da condividere?</b><span data-en="Send it on WhatsApp">Mandala su WhatsApp</span></div>
+      <a class="btn btn-primary" style="padding:9px 14px;font-size:12.5px;" href="https://wa.me/393428302287" target="_blank">342 830 2287</a>
+    </div>
+  </section>
+
+  <!-- EVENTO / ASSOCIAZIONE -->
+  <section id="evento">
+    <div class="section-label" data-en="WHO WE ARE">CHI SIAMO</div>
+    <h2 class="section-title" data-en="Citizens for the sea">Cittadini per il mare</h2>
+    <p class="section-intro" data-en="Riposto è Mare is a cultural association, born among the citizens of Riposto, for the protection of the sea as an ecosystem, the promotion of sustainable cultural tourism, and the enhancement of the town's historical and cultural heritage — including this diffuse museum.">Riposto è Mare è un'associazione culturale, nata dai cittadini di Riposto, per la tutela del mare come ecosistema, la promozione di un turismo culturale sostenibile e la valorizzazione del patrimonio storico-culturale della città — tra cui questo museo diffuso.</p>
+
+    <div class="wa-box">
+      <div><b data-en="Want to become a member?">Vuoi diventare socio?</b><span data-en="The association is open to anyone who shares its goals. Fill in the online membership form.">È aperta a chi ne condivide gli ideali. Compila il modulo di adesione online.</span></div>
+      <a class="btn btn-primary" style="padding:9px 14px;font-size:12.5px;white-space:nowrap;" href="https://docs.google.com/forms/d/e/1FAIpQLSeZYk9Q5P-ISoX_GfxbdZ2dhZpwRAkRkzXRz5LuSuhAFV5Ynw/viewform" target="_blank" rel="noopener" data-en="Fill in the form">Compila il modulo</a>
+    </div>
+
+    <div class="wa-box" style="margin-top:12px;">
+      <div><b data-en="Got a minute for the seafront?">Hai un minuto per il lungomare?</b><span data-en="Tell us how you'd like it. Anonymous, in Italian.">Dicci come lo vorresti. È anonimo.</span></div>
+      <a class="btn btn-primary" style="padding:9px 14px;font-size:12.5px;white-space:nowrap;" href="https://forms.gle/eZYt3U1odujGpnPP7" target="_blank" rel="noopener" data-en="Have your say">Di' la tua</a>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label" style="margin-top:4px;" data-en="EVENTS">APPUNTAMENTI</div>
+    <h2 class="section-title" data-en="An association, one step at a time">Un'associazione, un passo alla volta</h2>
+
+    <div class="event-card">
+      <div class="when" data-en="THURSDAY 29 OCTOBER 2026">GIOVEDÌ 29 OTTOBRE 2026</div>
+      <h3 data-en="Riposto è Mare is born">Nasce Riposto è Mare</h3>
+      <p data-en="At the Pro Loco di Riposto, the committee presented its projects — including the Museo Diffuso del Mare — and the association was formally constituted. It is now being registered.">Alla Pro Loco di Riposto il comitato ha presentato i propri progetti — tra cui il Museo Diffuso del Mare — e si è formalmente costituita l'associazione. È ora in fase di registrazione.</p>
+    </div>
+
+    <div class="event-card">
+      <div class="when" data-en="SUNDAY 4 OCTOBER 2026">DOMENICA 4 OTTOBRE 2026</div>
+      <h3 data-en="Riposto Nautical Institute">Istituto Nautico di Riposto</h3>
+      <p data-en="An evening with the planetarium, the telescope and underwater films by the Riposto divers' group, where we presented the panels and species posters of the Museo Diffuso del Mare. Thank you to everyone who came by.">Una serata con il planetario, il telescopio e i filmati subacquei del Gruppo sommozzatori di Riposto, in cui abbiamo presentato i pannelli e le locandine delle specie del Museo Diffuso del Mare. Grazie a chi è passato a trovarci.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p data-en="MUSEO DIFFUSO DEL MARE · THE IONIAN COAST OF RIPOSTO, SICILY">MUSEO DIFFUSO DEL MARE · LITORALE JONICO ETNEO DI RIPOSTO</p>
+    <p class="credit-line" data-en="A project promoted by the Riposto è Mare association (currently registering)">Progetto promosso dall'Associazione Riposto è Mare (in fase di registrazione)</p>
+    <p data-en="With the participation of the Pro Loco di Riposto">Con la partecipazione della Pro Loco di Riposto</p>
+    <p data-en="App and photographs: <a href=&quot;https://www.fotolapissable.it&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>fotolapissable</a> · Follow us on <a href=&quot;https://www.facebook.com/profile.php?id=61592981009493&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>Facebook</a>">App e fotografie: <a href="https://www.fotolapissable.it" target="_blank" rel="noopener">fotolapissable</a> · Seguici su <a href="https://www.facebook.com/profile.php?id=61592981009493" target="_blank" rel="noopener">Facebook</a></p>
+    <p data-en="Discover also <a href=&quot;https://riposto.fotolapissable.it&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>Riposto Guide</a>, the city guide">Scopri anche <a href="https://riposto.fotolapissable.it" target="_blank" rel="noopener">Riposto Guide</a>, la guida della città</p>
+    <p data-en="Before heading out on the seafront, check <a href=&quot;/meteo-Riposto/index.html&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;>Meteo Riposto</a> for live weather, radar and lightning">Prima di uscire sul lungomare, controlla <a href="/meteo-Riposto/index.html" target="_blank" rel="noopener">Meteo Riposto</a> per meteo, radar e fulmini in tempo reale</p>
+  </footer>
+
+</div>
+
+<script>
+/* SunCalc 2.1.0 (c) Volodymyr Agafonkin — licenza BSD-2-Clause — github.com/mourner/suncalc */
+(function(global, factory) {
+	typeof exports === "object" && typeof module !== "undefined" ? factory(exports) : typeof define === "function" && define.amd ? define(["exports"], factory) : (global = typeof globalThis !== "undefined" ? globalThis : global || self, factory(global.SunCalc = {}));
+})(this, function(exports) {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	//#region index.js
+	const { PI, sin, cos, tan, asin, atan2: atan, acos, sqrt, abs, round, floor } = Math;
+	const rad = PI / 180;
+	const dayMs = 864e5;
+	const J1970 = 2440588;
+	const J2000 = 2451545;
+	const earthRadius = 6378.14;
+	function fromJulian(j) {
+		return /* @__PURE__ */ new Date((j + .5 - J1970) * dayMs);
+	}
+	function toDays(date) {
+		return date.valueOf() / dayMs - .5 + J1970 - J2000;
+	}
+	function deltaT(d) {
+		const y = 2e3 + d / 365.2425;
+		let t;
+		if (y < 1920) {
+			t = y - 1900;
+			return -2.79 + t * (1.494119 + t * (-.0598939 + t * (.0061966 - t * 197e-6)));
+		}
+		if (y < 1941) {
+			t = y - 1920;
+			return 21.2 + t * (.84493 + t * (-.0761 + t * .0020936));
+		}
+		if (y < 1961) {
+			t = y - 1950;
+			return 29.07 + t * (.407 + t * (-1 / 233 + t / 2547));
+		}
+		if (y < 1986) {
+			t = y - 1975;
+			return 45.45 + t * (1.067 + t * (-1 / 260 - t / 718));
+		}
+		if (y < 2005) {
+			t = y - 2e3;
+			return 63.86 + t * (.3345 + t * (-.060374 + t * (.0017275 + t * (651814e-9 + t * 2373599e-11))));
+		}
+		if (y < 2050) {
+			t = y - 2e3;
+			return 62.92 + t * (.32217 + t * .005589);
+		}
+		t = (y - 1820) / 100;
+		return -20 + 32 * t * t - .5628 * (2150 - y);
+	}
+	function toDaysTT(d) {
+		return d + deltaT(d) / 86400;
+	}
+	function azimuth(H, phi, dec) {
+		return (atan(sin(H), cos(H) * sin(phi) - tan(dec) * cos(phi)) / rad + 540) % 360;
+	}
+	function altitude(H, phi, dec) {
+		return asin(sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(H));
+	}
+	function siderealTime(d, lw) {
+		return rad * (280.46061837 + 360.98564736629 * d) - lw;
+	}
+	function astroRefraction(h) {
+		if (h < 0) h = 0;
+		return 2967e-7 / tan(h + .00312536 / (h + .08901179));
+	}
+	function sunCoords(d) {
+		const t = d / 36525;
+		const L0 = rad * (280.46646 + t * (36000.76983 + t * 3032e-7));
+		const M = rad * (357.52911 + t * (35999.05029 - t * 1537e-7));
+		const sinM = sin(M);
+		const cosM = cos(M);
+		const C = rad * ((1.914602 - t * (.004817 + t * 14e-6)) * sinM + (.019993 - 101e-6 * t) * 2 * sinM * cosM + 289e-6 * sinM * (3 - 4 * sinM * sinM));
+		const Om = rad * (125.04 - 1934.136 * t);
+		const L = L0 + C - rad * (.00569 + .00478 * sin(Om));
+		const e = rad * (23.439291 - t * (.0130042 + t * (16e-8 - t * 504e-9))) + rad * .00256 * cos(Om);
+		return {
+			ra: atan(cos(e) * sin(L), cos(L)),
+			dec: asin(sin(e) * sin(L))
+		};
+	}
+	function getPosition(date, lat, lng) {
+		const lw = rad * -lng;
+		const phi = rad * lat;
+		const d = toDays(date);
+		const c = sunCoords(toDaysTT(d));
+		const H = siderealTime(d, lw) - c.ra;
+		const h = altitude(H, phi, c.dec);
+		return {
+			azimuth: azimuth(H, phi, c.dec),
+			altitude: (h + astroRefraction(h)) / rad
+		};
+	}
+	const times = [
+		[
+			-.833,
+			"sunrise",
+			"sunset"
+		],
+		[
+			-.3,
+			"sunriseEnd",
+			"sunsetStart"
+		],
+		[
+			-6,
+			"dawn",
+			"dusk"
+		],
+		[
+			-12,
+			"nauticalDawn",
+			"nauticalDusk"
+		],
+		[
+			-18,
+			"nightEnd",
+			"night"
+		],
+		[
+			6,
+			"goldenHourEnd",
+			"goldenHour"
+		]
+	];
+	function addTime(angle, riseName, setName) {
+		times.push([
+			angle,
+			riseName,
+			setName
+		]);
+	}
+	const J0 = 9e-4;
+	function observerAngle(height) {
+		return -2.076 * sqrt(height) / 60;
+	}
+	function wrapPi(a) {
+		return a - 2 * PI * round(a / (2 * PI));
+	}
+	function solarTransit(dt, lw) {
+		for (let i = 0; i < 3; i++) {
+			const H = wrapPi(siderealTime(dt, lw) - sunCoords(toDaysTT(dt)).ra);
+			dt -= H / (2 * PI);
+		}
+		return dt;
+	}
+	function getSetJ(h0, dt, sign, lw, phi, decT) {
+		const cosH0 = (sin(h0) - sin(phi) * sin(decT)) / (cos(phi) * cos(decT));
+		if (cosH0 < -1 || cosH0 > 1) return NaN;
+		let d = dt + sign * acos(cosH0) / (2 * PI);
+		for (let i = 0; i < 2; i++) {
+			const c = sunCoords(toDaysTT(d));
+			const H = wrapPi(siderealTime(d, lw) - c.ra);
+			const h = altitude(H, phi, c.dec);
+			const sinH = cos(phi) * cos(c.dec) * sin(H);
+			if (abs(sinH) < 1e-6) break;
+			d += (h - h0) / (2 * PI * sinH);
+		}
+		return d;
+	}
+	function civilMidnight(date, utcOffset) {
+		const offMs = utcOffset * 6e4;
+		return floor((date.valueOf() + offMs) / dayMs) * dayMs - offMs;
+	}
+	function solarDayTransit(date, lw, utcOffset) {
+		const anchor = utcOffset === void 0 ? date.valueOf() : civilMidnight(date, utcOffset) + dayMs / 2;
+		const lon = J0 + lw / (2 * PI);
+		return solarTransit(round(toDays(anchor) - lon) + lon, lw);
+	}
+	function getTimes(date, lat, lng, height = 0, utcOffset) {
+		const lw = rad * -lng;
+		const phi = rad * lat;
+		const dh = observerAngle(height);
+		const dt = solarDayTransit(date, lw, utcOffset);
+		const dec = sunCoords(toDaysTT(dt)).dec;
+		const result = {
+			solarNoon: fromJulian(dt + J2000),
+			nadir: fromJulian(dt + J2000 - .5)
+		};
+		for (const [angle, riseName, setName] of times) {
+			const h0 = (angle + dh) * rad;
+			const jrise = getSetJ(h0, dt, -1, lw, phi, dec);
+			const jset = getSetJ(h0, dt, 1, lw, phi, dec);
+			result[riseName] = Number.isNaN(jrise) ? null : fromJulian(jrise + J2000);
+			result[setName] = Number.isNaN(jset) ? null : fromJulian(jset + J2000);
+		}
+		if (result.sunrise === null) {
+			const noonAlt = altitude(0, phi, dec);
+			const riseSetAlt = (times[0][0] + dh) * rad;
+			result.alwaysUp = noonAlt > riseSetAlt;
+			result.alwaysDown = noonAlt <= riseSetAlt;
+		}
+		return result;
+	}
+	function nutationObliquity(t) {
+		const om = rad * (125.04452 - 1934.136261 * t);
+		const ls = rad * (280.4665 + 36000.7698 * t);
+		const lm = rad * (218.3165 + 481267.8813 * t);
+		const dpsi = (-17.2 * sin(om) - 1.32 * sin(2 * ls) - .23 * sin(2 * lm) + .21 * sin(2 * om)) / 3600;
+		const deps = (9.2 * cos(om) + .57 * cos(2 * ls) + .1 * cos(2 * lm) - .09 * cos(2 * om)) / 3600;
+		const eps0 = 23.439291 - t * (.0130042 + t * (16e-8 - t * 504e-9));
+		return {
+			dpsi,
+			eps: rad * (eps0 + deps)
+		};
+	}
+	const moonLon = new Int32Array([
+		0,
+		0,
+		1,
+		0,
+		6288774,
+		-20905355,
+		2,
+		0,
+		-1,
+		0,
+		1274027,
+		-3699111,
+		2,
+		0,
+		0,
+		0,
+		658314,
+		-2955968,
+		0,
+		0,
+		2,
+		0,
+		213618,
+		-569925,
+		0,
+		1,
+		0,
+		0,
+		-185116,
+		48888,
+		0,
+		0,
+		0,
+		2,
+		-114332,
+		-3149,
+		2,
+		0,
+		-2,
+		0,
+		58793,
+		246158,
+		2,
+		-1,
+		-1,
+		0,
+		57066,
+		-152138,
+		2,
+		0,
+		1,
+		0,
+		53322,
+		-170733,
+		2,
+		-1,
+		0,
+		0,
+		45758,
+		-204586,
+		0,
+		1,
+		-1,
+		0,
+		-40923,
+		-129620,
+		1,
+		0,
+		0,
+		0,
+		-34720,
+		108743,
+		0,
+		1,
+		1,
+		0,
+		-30383,
+		104755,
+		2,
+		0,
+		0,
+		-2,
+		15327,
+		10321,
+		0,
+		0,
+		1,
+		2,
+		-12528,
+		0,
+		0,
+		0,
+		1,
+		-2,
+		10980,
+		79661,
+		4,
+		0,
+		-1,
+		0,
+		10675,
+		-34782,
+		0,
+		0,
+		3,
+		0,
+		10034,
+		-23210,
+		4,
+		0,
+		-2,
+		0,
+		8548,
+		-21636,
+		2,
+		1,
+		-1,
+		0,
+		-7888,
+		24208,
+		2,
+		1,
+		0,
+		0,
+		-6766,
+		30824,
+		1,
+		0,
+		-1,
+		0,
+		-5163,
+		-8379,
+		1,
+		1,
+		0,
+		0,
+		4987,
+		-16675,
+		2,
+		-1,
+		1,
+		0,
+		4036,
+		-12831,
+		2,
+		0,
+		2,
+		0,
+		3994,
+		-10445,
+		4,
+		0,
+		0,
+		0,
+		3861,
+		-11650,
+		2,
+		0,
+		-3,
+		0,
+		3665,
+		14403,
+		0,
+		1,
+		-2,
+		0,
+		-2689,
+		-7003,
+		2,
+		0,
+		-1,
+		2,
+		-2602,
+		0,
+		2,
+		-1,
+		-2,
+		0,
+		2390,
+		10056,
+		1,
+		0,
+		1,
+		0,
+		-2348,
+		6322,
+		2,
+		-2,
+		0,
+		0,
+		2236,
+		-9884,
+		0,
+		1,
+		2,
+		0,
+		-2120,
+		5751,
+		0,
+		2,
+		0,
+		0,
+		-2069,
+		0,
+		2,
+		-2,
+		-1,
+		0,
+		2048,
+		-4950,
+		2,
+		0,
+		1,
+		-2,
+		-1773,
+		4130,
+		2,
+		0,
+		0,
+		2,
+		-1595,
+		0,
+		4,
+		-1,
+		-1,
+		0,
+		1215,
+		-3958,
+		0,
+		0,
+		2,
+		2,
+		-1110,
+		0,
+		3,
+		0,
+		-1,
+		0,
+		-892,
+		3258,
+		2,
+		1,
+		1,
+		0,
+		-810,
+		2616,
+		4,
+		-1,
+		-2,
+		0,
+		759,
+		-1897,
+		0,
+		2,
+		-1,
+		0,
+		-713,
+		-2117,
+		2,
+		2,
+		-1,
+		0,
+		-700,
+		2354,
+		2,
+		1,
+		-2,
+		0,
+		691,
+		0,
+		2,
+		-1,
+		0,
+		-2,
+		596,
+		0,
+		4,
+		0,
+		1,
+		0,
+		549,
+		-1423,
+		0,
+		0,
+		4,
+		0,
+		537,
+		-1117,
+		4,
+		-1,
+		0,
+		0,
+		520,
+		-1571,
+		1,
+		0,
+		-2,
+		0,
+		-487,
+		-1739,
+		2,
+		1,
+		0,
+		-2,
+		-399,
+		0,
+		0,
+		0,
+		2,
+		-2,
+		-381,
+		-4421,
+		1,
+		1,
+		1,
+		0,
+		351,
+		0,
+		3,
+		0,
+		-2,
+		0,
+		-340,
+		0,
+		4,
+		0,
+		-3,
+		0,
+		330,
+		0,
+		2,
+		-1,
+		2,
+		0,
+		327,
+		0,
+		0,
+		2,
+		1,
+		0,
+		-323,
+		1165,
+		1,
+		1,
+		-1,
+		0,
+		299,
+		0,
+		2,
+		0,
+		3,
+		0,
+		294,
+		0,
+		2,
+		0,
+		-1,
+		-2,
+		0,
+		8752
+	]);
+	const moonLat = new Int32Array([
+		0,
+		0,
+		0,
+		1,
+		5128122,
+		0,
+		0,
+		1,
+		1,
+		280602,
+		0,
+		0,
+		1,
+		-1,
+		277693,
+		2,
+		0,
+		0,
+		-1,
+		173237,
+		2,
+		0,
+		-1,
+		1,
+		55413,
+		2,
+		0,
+		-1,
+		-1,
+		46271,
+		2,
+		0,
+		0,
+		1,
+		32573,
+		0,
+		0,
+		2,
+		1,
+		17198,
+		2,
+		0,
+		1,
+		-1,
+		9266,
+		0,
+		0,
+		2,
+		-1,
+		8822,
+		2,
+		-1,
+		0,
+		-1,
+		8216,
+		2,
+		0,
+		-2,
+		-1,
+		4324,
+		2,
+		0,
+		1,
+		1,
+		4200,
+		2,
+		1,
+		0,
+		-1,
+		-3359,
+		2,
+		-1,
+		-1,
+		1,
+		2463,
+		2,
+		-1,
+		0,
+		1,
+		2211,
+		2,
+		-1,
+		-1,
+		-1,
+		2065,
+		0,
+		1,
+		-1,
+		-1,
+		-1870,
+		4,
+		0,
+		-1,
+		-1,
+		1828,
+		0,
+		1,
+		0,
+		1,
+		-1794,
+		0,
+		0,
+		0,
+		3,
+		-1749,
+		0,
+		1,
+		-1,
+		1,
+		-1565,
+		1,
+		0,
+		0,
+		1,
+		-1491,
+		0,
+		1,
+		1,
+		1,
+		-1475,
+		0,
+		1,
+		1,
+		-1,
+		-1410,
+		0,
+		1,
+		0,
+		-1,
+		-1344,
+		1,
+		0,
+		0,
+		-1,
+		-1335,
+		0,
+		0,
+		3,
+		1,
+		1107,
+		4,
+		0,
+		0,
+		-1,
+		1021,
+		4,
+		0,
+		-1,
+		1,
+		833,
+		0,
+		0,
+		1,
+		-3,
+		777,
+		4,
+		0,
+		-2,
+		1,
+		671,
+		2,
+		0,
+		0,
+		-3,
+		607,
+		2,
+		0,
+		2,
+		-1,
+		596,
+		2,
+		-1,
+		1,
+		-1,
+		491,
+		2,
+		0,
+		-2,
+		1,
+		-451,
+		0,
+		0,
+		3,
+		-1,
+		439,
+		2,
+		0,
+		2,
+		1,
+		422,
+		2,
+		0,
+		-3,
+		-1,
+		421,
+		2,
+		1,
+		-1,
+		1,
+		-366,
+		2,
+		1,
+		0,
+		1,
+		-351,
+		4,
+		0,
+		0,
+		1,
+		331,
+		2,
+		-1,
+		1,
+		1,
+		315,
+		2,
+		-2,
+		0,
+		-1,
+		302,
+		0,
+		0,
+		1,
+		3,
+		-283,
+		2,
+		1,
+		1,
+		-1,
+		-229,
+		1,
+		1,
+		0,
+		-1,
+		223,
+		1,
+		1,
+		0,
+		1,
+		223,
+		0,
+		1,
+		-2,
+		-1,
+		-220,
+		2,
+		1,
+		-1,
+		-1,
+		-220,
+		1,
+		0,
+		1,
+		1,
+		-185,
+		2,
+		-1,
+		-2,
+		-1,
+		181,
+		0,
+		1,
+		2,
+		1,
+		-177,
+		4,
+		0,
+		-2,
+		-1,
+		176,
+		4,
+		-1,
+		-1,
+		-1,
+		166,
+		1,
+		0,
+		1,
+		-1,
+		-164,
+		4,
+		0,
+		1,
+		-1,
+		132,
+		1,
+		0,
+		-1,
+		-1,
+		-119,
+		4,
+		-1,
+		0,
+		-1,
+		115,
+		2,
+		-2,
+		0,
+		1,
+		107
+	]);
+	function moonCoords(d) {
+		const t = d / 36525;
+		const Lp = 218.3164477 + t * (481267.88123421 + t * (-.0015786 + t * (1 / 538841 - t / 65194e3)));
+		const D = 297.8501921 + t * (445267.1114034 + t * (-.0018819 + t * (1 / 545868 - t / 113065e3)));
+		const M = 357.5291092 + t * (35999.0502909 + t * (-1536e-7 + t / 2449e4));
+		const Mp = 134.9633964 + t * (477198.8675055 + t * (.0087414 + t * (1 / 69699 - t / 14712e3)));
+		const F = 93.272095 + t * (483202.0175233 + t * (-.0036539 + t * (-1 / 3526e3 + t / 86331e4)));
+		const A1 = 119.75 + 131.849 * t;
+		const A2 = 53.09 + 479264.29 * t;
+		const A3 = 313.45 + 481266.484 * t;
+		const E = 1 - t * (.002516 + t * 74e-7);
+		const Dr = rad * D, Mr = rad * M, Mpr = rad * Mp, Fr = rad * F;
+		let sl = 0, sr = 0, sb = 0;
+		for (let i = 0; i < moonLon.length; i += 6) {
+			const m = moonLon[i + 1];
+			const arg = moonLon[i] * Dr + m * Mr + moonLon[i + 2] * Mpr + moonLon[i + 3] * Fr;
+			const f = m === 1 || m === -1 ? E : m === 2 || m === -2 ? E * E : 1;
+			sl += moonLon[i + 4] * f * sin(arg);
+			sr += moonLon[i + 5] * f * cos(arg);
+		}
+		for (let i = 0; i < moonLat.length; i += 5) {
+			const m = moonLat[i + 1];
+			const arg = moonLat[i] * Dr + m * Mr + moonLat[i + 2] * Mpr + moonLat[i + 3] * Fr;
+			const f = m === 1 || m === -1 ? E : m === 2 || m === -2 ? E * E : 1;
+			sb += moonLat[i + 4] * f * sin(arg);
+		}
+		const A1r = rad * A1, Lpr = rad * Lp;
+		sl += 3958 * sin(A1r) + 1962 * sin(Lpr - Fr) + 318 * sin(rad * A2);
+		sb += -2235 * sin(Lpr) + 382 * sin(rad * A3) + 175 * sin(A1r - Fr) + 175 * sin(A1r + Fr) + 127 * sin(Lpr - Mpr) - 115 * sin(Lpr + Mpr);
+		const { dpsi, eps } = nutationObliquity(t);
+		const l = rad * (Lp + sl / 1e6 + dpsi);
+		const b = rad * (sb / 1e6);
+		return {
+			ra: atan(sin(l) * cos(eps) - tan(b) * sin(eps), cos(l)),
+			dec: asin(sin(b) * cos(eps) + cos(b) * sin(eps) * sin(l)),
+			dist: 385000.56 + sr / 1e3
+		};
+	}
+	function getMoonPosition(date, lat, lng) {
+		const lw = rad * -lng;
+		const phi = rad * lat;
+		const d = toDays(date);
+		const c = moonCoords(toDaysTT(d));
+		const H = siderealTime(d, lw) - c.ra;
+		const hGeo = altitude(H, phi, c.dec);
+		const h = hGeo - asin(earthRadius / c.dist * cos(hGeo));
+		const pa = atan(sin(H), tan(phi) * cos(c.dec) - sin(c.dec) * cos(H));
+		return {
+			azimuth: azimuth(H, phi, c.dec),
+			altitude: (h + astroRefraction(h)) / rad,
+			distance: c.dist,
+			parallacticAngle: pa / rad
+		};
+	}
+	function getMoonIllumination(date = /* @__PURE__ */ new Date()) {
+		const d = toDaysTT(toDays(date));
+		const s = sunCoords(d);
+		const m = moonCoords(d);
+		const sdist = 149598e3;
+		const phi = acos(sin(s.dec) * sin(m.dec) + cos(s.dec) * cos(m.dec) * cos(s.ra - m.ra));
+		const inc = atan(sdist * sin(phi), m.dist - sdist * cos(phi));
+		const angle = atan(cos(s.dec) * sin(s.ra - m.ra), sin(s.dec) * cos(m.dec) - cos(s.dec) * sin(m.dec) * cos(s.ra - m.ra));
+		const waxing = angle < 0;
+		return {
+			fraction: (1 + cos(inc)) / 2,
+			phase: .5 + .5 * inc * (waxing ? -1 : 1) / PI,
+			angle: angle / rad,
+			waxing
+		};
+	}
+	function hoursLater(date, h) {
+		return new Date(date.valueOf() + h * dayMs / 24);
+	}
+	function moonHeight(date, lat, lng) {
+		const p = getMoonPosition(date, lat, lng);
+		return p.altitude + .2725 * asin(earthRadius / p.distance) / rad + .09;
+	}
+	function refineMoonCross(tMs, lat, lng) {
+		for (let i = 0; i < 2; i++) {
+			const h = moonHeight(new Date(tMs), lat, lng);
+			const dh = (moonHeight(new Date(tMs + 3e4), lat, lng) - moonHeight(/* @__PURE__ */ new Date(tMs - 3e4), lat, lng)) / 6e4;
+			tMs -= h / dh;
+		}
+		return tMs;
+	}
+	function moonHourAngle(t, lw) {
+		const d = toDays(t);
+		return siderealTime(d, lw) - moonCoords(toDaysTT(d)).ra;
+	}
+	function moonTransit(t0, lw, H0) {
+		const rate = 2 * PI * .96614 / dayMs;
+		const a = H0 - moonHourAngle(t0, lw);
+		let t = t0 + (a - 2 * PI * floor(a / (2 * PI))) / rate;
+		for (let i = 0; i < 2; i++) t -= wrapPi(moonHourAngle(t, lw) - H0) / rate;
+		return t < t0 + dayMs ? t : void 0;
+	}
+	function getMoonTimes(date, lat, lng, utcOffset) {
+		const t = utcOffset === void 0 ? fromJulian(solarDayTransit(date, rad * -lng) + J2000 - .5) : new Date(civilMidnight(date, utcOffset));
+		let h0 = moonHeight(t, lat, lng);
+		let rise, set, hMax = h0;
+		for (let i = 1; i <= 24; i += 2) {
+			const h1 = moonHeight(hoursLater(t, i), lat, lng);
+			const h2 = moonHeight(hoursLater(t, i + 1), lat, lng);
+			hMax = Math.max(hMax, h1, h2);
+			const a = (h0 + h2) / 2 - h1;
+			const b = (h2 - h0) / 2;
+			const xe = -b / (2 * a);
+			const d = b * b - 4 * a * h1;
+			let roots = 0, x1 = 0, x2 = 0;
+			const ye = (a * xe + b) * xe + h1;
+			if (d >= 0) {
+				const dx = sqrt(d) / (abs(a) * 2);
+				x1 = xe - dx;
+				x2 = xe + dx;
+				if (abs(x1) <= 1) roots++;
+				if (abs(x2) <= 1) roots++;
+				if (x1 < -1) x1 = x2;
+			}
+			if (roots === 1) {
+				if (h0 < 0) rise = i + x1;
+				else set = i + x1;
+			} else if (roots === 2) {
+				rise = i + (ye < 0 ? x2 : x1);
+				set = i + (ye < 0 ? x1 : x2);
+			}
+			if (rise !== void 0 && set !== void 0) break;
+			h0 = h2;
+		}
+		const result = {};
+		if (rise !== void 0) result.rise = new Date(refineMoonCross(hoursLater(t, rise).valueOf(), lat, lng));
+		if (set !== void 0) result.set = new Date(refineMoonCross(hoursLater(t, set).valueOf(), lat, lng));
+		const lw = rad * -lng;
+		const transit = moonTransit(t.valueOf(), lw, 0);
+		const lowerTransit = moonTransit(t.valueOf(), lw, PI);
+		if (transit !== void 0) result.transit = new Date(transit);
+		if (lowerTransit !== void 0) result.lowerTransit = new Date(lowerTransit);
+		if (rise === void 0 && set === void 0) {
+			result.alwaysUp = hMax > 0;
+			result.alwaysDown = hMax <= 0;
+		}
+		return result;
+	}
+	//#endregion
+	exports.addTime = addTime;
+	exports.getMoonIllumination = getMoonIllumination;
+	exports.getMoonPosition = getMoonPosition;
+	exports.getMoonTimes = getMoonTimes;
+	exports.getPosition = getPosition;
+	exports.getTimes = getTimes;
+	exports.times = times;
+});
+
+</script>
+<script>
+
+// ================= LINGUE =================
+let LANG = 'it';
+const TXT = {
+  it: {
+    card:'Scopri la scheda →', openCard:'Apri la scheda →', startPoint:'Punto di partenza', fromStart:'m dalla partenza',
+    locate:'📍 La mia posizione', locating:'📍 Cerco la posizione…', alerts:'🔔 Avvisami alle tappe', alertsOn:'🔔 Avvisi attivi',
+    nearest:'Tappa più vicina:', about:'a circa', atStop:'🔔 Sei alla tappa',
+    searching:'Cerco la tua posizione… Tieni aperta questa pagina mentre cammini.',
+    noGeo:'Geolocalizzazione non disponibile su questo browser.',
+    geoErr:m => 'Non riesco ad accedere alla tua posizione (' + m + '). Controlla i permessi di localizzazione del browser.',
+    showErr:'Errore nel mostrare la posizione: ',
+    sun:'SOLE OGGI', moon:'LUNA OGGI', sunrise:'Alba', sunset:'Tramonto', rises:'Sorge', sets:'Tramonta', lit:'illuminata',
+    phases:['Luna nuova','Luna crescente','Primo quarto','Gibbosa crescente','Luna piena','Gibbosa calante','Ultimo quarto','Luna calante'],
+    install:'📲 Aggiungi questa app alla schermata Home per aprirla più velocemente.',
+    installIOS:'📲 Su iPhone: tocca Condividi e poi "Aggiungi a Home" per installare l\'app.'
+  },
+  en: {
+    card:'Read the full card (in Italian) →', openCard:'Open the card (in Italian) →', startPoint:'Starting point', fromStart:'m from the start',
+    locate:'📍 My position', locating:'📍 Finding your position…', alerts:'🔔 Alert me at each stop', alertsOn:'🔔 Alerts on',
+    nearest:'Nearest stop:', about:'about', atStop:'🔔 You are at stop',
+    searching:'Finding your position… Keep this page open while you walk.',
+    noGeo:'Geolocation is not available in this browser.',
+    geoErr:m => 'Unable to access your position (' + m + '). Check the browser\'s location permissions.',
+    showErr:'Error while showing your position: ',
+    sun:'SUN TODAY', moon:'MOON TODAY', sunrise:'Sunrise', sunset:'Sunset', rises:'Rises', sets:'Sets', lit:'illuminated',
+    phases:['New moon','Waxing crescent','First quarter','Waxing gibbous','Full moon','Waning gibbous','Last quarter','Waning crescent'],
+    install:'📲 Add this app to your Home screen to open it faster.',
+    installIOS:'📲 On iPhone: tap Share, then "Add to Home Screen" to install the app.'
+  }
+};
+const t = k => TXT[LANG][k];
+// nome e descrizione di una tappa nella lingua corrente
+const nm = s => (LANG === 'en' && s.nameEn) ? s.nameEn : s.name;
+const ds = s => (LANG === 'en' && s.descEn) ? s.descEn : s.desc;
+
+// nomi e descrizioni in inglese delle specie (il nome in dialetto e quello scientifico non cambiano)
+const SPECIE_EN = {
+  'Suro':['Atlantic horse mackerel','An oily fish that crosses the Ionian Sea in large silvery shoals. Caught at night with the lampara (lamp fishing), gathering the shoals with "u scrùsciu" — the stamping of feet on the hull.'],
+  'Palamito':['Atlantic bonito','A fast predator that arrives in late summer following the shoals of small oily fish. Caught by trolling and with night longlines; its red flesh used to be mistaken for tuna at the market.'],
+  'Scorfano':['Red scorpionfish','Motionless and camouflaged among the lava rocks, almost invisible. Its spines are venomous but harmless if handled with care — its head is the secret of fish soup.'],
+  'Sarago':['White seabream','"Maliziato" (wily): one of the hardest fish to fool with a line or a longline. It lives among the rocks and the Posidonia seagrass meadows of this coast.'],
+  'Polpo':['Common octopus','"Ammarrato" (moored) to its den like a boat to its rope. Intelligent and a master of camouflage, traditionally caught with lamp, trident and pots.'],
+  'Seppia':['Common cuttlefish','In spring it comes close to shore to lay its eggs among the Posidonia. Known for its black ink and for the cuttlebone the sea leaves on the beach after storms.'],
+  'Pesce spada':['Swordfish','A great predator of the open sea: its upper jaw extends into a flat, sharp sword, up to a third of its body length.'],
+  'Tonno':['Atlantic bluefin tuna','The giant among the oily fish: a tireless swimmer that crosses the Mediterranean in schools to spawn and can exceed two and a half metres.'],
+  'Alalunga':['Albacore','The tuna with very long pectoral fins, from which it takes its name ("long wing"). Pale, delicate flesh, caught offshore.'],
+  'Pesce spatola':['Silver scabbardfish','A long, flat body as thin as a silver ribbon, with no scales. It lives in deep water and rises towards the surface at night.'],
+  'Occhiata':['Saddled seabream','Recognised by its large eyes and the black spot edged with white at the base of the tail. It lives in shoals along rocky shores, near the surface.'],
+  'Boga':['Bogue','A small silvery fish with thin golden lines along its sides and large eyes. It lives in dense shoals close to shore.'],
+  'Ricciola':['Greater amberjack','The largest jack of the Mediterranean: a slender, muscular body, blue-violet back and silvery sides with a golden sheen.'],
+  'Gambero rosso':['Giant red shrimp','A crustacean of the deep muddy seabed, hundreds of metres below the surface, bright red even when alive.'],
+  'Acciuga':['European anchovy','A small silvery fish that gathers in dense shoals near the surface. Caught at night with the lamp and nets, it is the everyday catch of Riposto\'s fishermen.']
+};
+const STOP_EN = {
+  'Percorso Storico':['Historic Route','Giusy Bonaccorsi — reaches the seafront here; the full route with its 4 stops is mapped in the Historic Route section'],
+  'Partenza':['Start','Beginning of the route on the Riposto seafront'],
+  'Molo di Torre Archirafi':['Torre Archirafi pier','End of the route']
+};
+// ==========================================
+
+const specie = [
+  {icon:'🐟', name:'Suro', dial:'Sauro', sci:'Trachurus trachurus',
+   desc:'Pesce azzurro che attraversa il Ionio in grandi banchi argentati. Pescato di notte con la lampara, radunando i banchi con "u scrùsciu" — il battere dei piedi sullo scafo.',
+   url:'https://debonair-stilton-413.notion.site/38984f34c2198100b9bfc7b34b1f3a04'},
+  {icon:'🐟', name:'Palamito', dial:'Palamitu', sci:'Sarda sarda',
+   desc:'Predatore veloce che arriva a fine estate seguendo il pesce azzurro. Pescato con traina e palamiti notturni; la carne rossa veniva scambiata per tonno al mercato.',
+   url:'https://debonair-stilton-413.notion.site/38984f34c219810d8f27d671ef5e713e'},
+  {icon:'🐡', name:'Scorfano', dial:'Cipudda / Scrofina', sci:'Scorpaena scrofa',
+   desc:'Immobile e mimetizzato tra le rocce laviche, quasi invisibile. Spine velenose ma innocue se maneggiato con cura — la sua testa è il segreto della zuppa di pesce.',
+   url:'https://debonair-stilton-413.notion.site/38984f34c21981d8971bf216a64ba8b4'},
+  {icon:'🐟', name:'Sarago', dial:'Saragu', sci:'Diplodus sargus',
+   desc:'"Maliziato": tra i pesci più difficili da ingannare con lenza o conzo. Vive tra le rocce e le praterie di posidonia del litorale.',
+   url:'https://debonair-stilton-413.notion.site/38984f34c21981098c53f2743eb35c08'},
+  {icon:'🐙', name:'Polpo', dial:'Puppu', sci:'Octopus vulgaris',
+   desc:'"Ammarrato" alla sua tana come una barca alla sua cima. Intelligente e mimetico, pescato tradizionalmente con lampara, fiocina e nasse.',
+   url:'https://debonair-stilton-413.notion.site/38984f34c21981f99112f983630daa22'},
+  {icon:'🦑', name:'Seppia', dial:'Siccia', sci:'Sepia officinalis',
+   desc:'In primavera si avvicina a riva per deporre le uova tra la posidonia. Nota per l\'inchiostro nero e per l\'osso interno che il mare lascia in spiaggia dopo le mareggiate.',
+   url:'https://debonair-stilton-413.notion.site/38984f34c219818db22bff27383aa108'},
+  {icon:'🗡️', name:'Pesce spada', dial:'Pisci spata', sci:'Xiphias gladius',
+   desc:'Grande predatore del mare aperto: la mascella superiore si allunga in una spada piatta e affilata, lunga fino a un terzo del corpo.',
+   url:'https://debonair-stilton-413.notion.site/3ec84f34c21981c79ddee584c1f16f63'},
+  {icon:'🐟', name:'Tonno', dial:'Tunnu', sci:'Thunnus thynnus',
+   desc:'Il gigante dei pesci azzurri: nuotatore instancabile, attraversa il Mediterraneo in branchi per riprodursi e può superare i due metri e mezzo.',
+   url:'https://debonair-stilton-413.notion.site/3ec84f34c219813e8aecd93a14a55d7a'},
+  {icon:'🐟', name:'Alalunga', dial:'Alalonga', sci:'Thunnus alalunga',
+   desc:'Il tonno dalle lunghissime pinne pettorali, da cui prende il nome. Carne chiara e delicata, pescata al largo.',
+   url:'https://debonair-stilton-413.notion.site/3ec84f34c219812cb8dfd6370d1b1391'},
+  {icon:'🐟', name:'Pesce spatola', dial:'Pisci sciabbula', sci:'Lepidopus caudatus',
+   desc:'Corpo lungo, piatto e sottile come un nastro d\'argento, senza squame. Vive in profondità e risale verso la superficie di notte.',
+   url:'https://debonair-stilton-413.notion.site/3ec84f34c21981f9a242d852fdc8b166'},
+  {icon:'🐟', name:'Occhiata', dial:'Ucchiata', sci:'Oblada melanura',
+   desc:'Si riconosce dai grandi occhi e dalla macchia nera bordata di bianco alla base della coda. Vive in branchi lungo le scogliere, vicino alla superficie.',
+   url:'https://debonair-stilton-413.notion.site/3ec84f34c219815aa6e6dbbed9e751ba'},
+  {icon:'🐟', name:'Boga', dial:'Vopa', sci:'Boops boops',
+   desc:'Piccolo pesce argenteo con sottili linee dorate sui fianchi e occhi grandi. Vive in fitti branchi sotto costa.',
+   url:'https://debonair-stilton-413.notion.site/3ec84f34c219815d9a76c4d1f4a7bd36'},
+  {icon:'🐟', name:'Ricciola', dial:'Aricciola', sci:'Seriola dumerili',
+   desc:'Il più grande carangide del Mediterraneo: corpo slanciato e muscoloso, dorso blu-violaceo, fianchi argentei con una sfumatura dorata.',
+   url:'https://debonair-stilton-413.notion.site/3ec84f34c219817f89afd18f2217135d'},
+  {icon:'🦐', name:'Gambero rosso', dial:'Ammaru russu', sci:'Aristaeomorpha foliacea',
+   desc:'Crostaceo dei fondali fangosi profondi, a centinaia di metri sotto la superficie, di un rosso intenso già da vivo.',
+   url:'https://debonair-stilton-413.notion.site/3ec84f34c21981c6a860c71c30543ee8'},
+  {icon:'🐟', name:'Acciuga', dial:'Masculinu', sci:'Engraulis encrasicolus',
+   desc:'Piccolo pesce azzurro che forma grandi banchi vicino alla superficie. Pescato di notte con la lampara e le reti, è il pesce di tutti i giorni dei pescatori di Riposto.',
+   url:'https://debonair-stilton-413.notion.site/40684f34c21981e9bd4bf2cc9bfa4e09'},
+];
+
+// Tracciato reale del percorso (punti presi da Google Maps), dalla partenza sul lungomare
+// di Riposto al molo di Torre Archirafi: circa 2,3 km.
+const track = [
+  [37.72686002319092, 15.209703802174218],
+  [37.724569707794046, 15.211207337165238],
+  [37.72142978678185, 15.213868088479305],
+  [37.72115592428981, 15.214071643330156],
+  [37.717643759723614, 15.216432022852533],
+  [37.71402391191273, 15.218164530823707],
+  [37.71191134719924, 15.218507360731735],
+  [37.71012703948311, 15.21836301130106],
+  [37.709884370384316, 15.218254749220556],
+  [37.70922773214134, 15.218182574507358],
+  [37.708994792528316, 15.218105684171302],
+  [37.70862867965244, 15.219114679713769],
+];
+
+// ORDINE DELLE TAPPE dalla partenza all'arrivo: dallo scoglio al mare aperto, fino ai fondali profondi.
+// Per cambiare l'ordine basta spostare i nomi qui sotto: le posizioni sulla mappa
+// vengono ricalcolate da sole, a distanza uguale lungo il tracciato.
+const ordine = ['Polpo','Seppia','Scorfano','Sarago','Occhiata','Boga','Suro','Palamito',
+                'Ricciola','Alalunga','Tonno','Pesce spada','Pesce spatola','Acciuga','Gambero rosso'];
+
+function haversine(lat1,lng1,lat2,lng2){
+  const R = 6371000, toRad = d => d*Math.PI/180;
+  const dLat = toRad(lat2-lat1), dLng = toRad(lng2-lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R * 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+const segLen = track.slice(1).map((p,i) => haversine(track[i][0],track[i][1],p[0],p[1]));
+const trackLen = segLen.reduce((a,b) => a+b, 0);
+// punto sul tracciato a "d" metri dalla partenza
+function pointAt(d){
+  for (let i = 0; i < segLen.length; i++){
+    if (d <= segLen[i] || i === segLen.length-1){
+      const t = Math.max(0, Math.min(1, d/segLen[i]));
+      return [track[i][0] + (track[i+1][0]-track[i][0])*t, track[i][1] + (track[i+1][1]-track[i][1])*t];
+    }
+    d -= segLen[i];
+  }
+}
+const passo = trackLen / (ordine.length + 1);
+
+const stops = [
+  {dist:null, type:'storia', name:'Percorso Storico', lat:37.72973788763594, lng:15.207192328738394,
+   desc:'Giusy Bonaccorsi — raggiunge qui il lungomare; il percorso completo con le 4 tappe è sulla mappa nella sezione Percorso Storico',
+   url:'https://titanium-memory-f5d.notion.site/RIPOSTO-39baf2a3c03280898d84f86fc7ea8a7b'},
+  {dist:0, type:'anchor', name:'Partenza', lat:track[0][0], lng:track[0][1], desc:'Inizio del percorso sul lungomare di Riposto'},
+  ...ordine.map((n,i) => {
+    const d = passo*(i+1), p = pointAt(d);
+    return {num:i+1, dist:Math.round(d), type:'fish', name:n, lat:+p[0].toFixed(6), lng:+p[1].toFixed(6), ref:n};
+  }),
+  {dist:Math.round(trackLen), type:'evento', name:'Molo di Torre Archirafi', lat:track[track.length-1][0], lng:track[track.length-1][1], desc:'Arrivo del percorso'},
+];
+const distTxt = s => s.dist === null ? '' : s.dist === 0 ? t('startPoint') : s.dist + ' ' + t('fromStart');
+specie.forEach(sp => { const e = SPECIE_EN[sp.name]; if (e) sp.en = {name:e[0], desc:e[1]}; });
+stops.forEach(s => { const e = STOP_EN[s.name]; if (e) { s.nameEn = e[0]; s.descEn = e[1]; } });
+
+// ==========================================
+// PERCORSO DEL PORTO ANTICO DI MASCALI (dal monte al mare)
+// Testi dal materiale dell’arch. Santa Sorbello. Le tappe senza lat/lng restano
+// nell’elenco; quando la posizione è verificata basta aggiungere lat e lng.
+// ==========================================
+const portoStops = [
+  {lat:37.73855, lng:15.18620,
+   it:{name:'Santuario di Santa Maria La Strada', period:'VI–IX sec. · età bizantina',
+       desc:'Monaci italo-greci presidiarono il porto dall’alto con una chiesetta e una torre campanaria dedicata alla Madonna Odigitria, «colei che mostra la via». Sorgeva accanto al cursus publicus, l’antica via militare tra Zancle e Siracusa.'},
+   en:{name:'Sanctuary of Santa Maria La Strada', period:'6th–9th century · Byzantine age',
+       desc:'Italo-Greek monks guarded the harbour from above with a small church and bell tower dedicated to the Madonna Odigitria, «she who shows the way». It stood beside the cursus publicus, the ancient military road between Zancle and Syracuse.'}},
+  {lat:37.737080, lng:15.197570, extra:[[37.744169, 15.187571]],
+   it:{name:'Le pagliare', period:'XII–XVIII sec. · abitazioni stagionali',
+       desc:'Case circolari in pietra a secco con tetto di giunco a tholos, abitate da aprile a ottobre dai lavoranti della darsena, in prevalenza messinesi. Da qui i toponimi «pagliara di Riposto» e «pagliara di Giarre».'},
+   en:{name:'The pagliare', period:'12th–18th century · seasonal dwellings',
+       desc:'Round dry-stone houses with a thatched tholos roof, lived in from April to October by the dockyard workers, mostly from Messina. They gave their names to the localities «pagliara di Riposto» and «pagliara di Giarre».'}},
+  {lat:37.73907, lng:15.18611,
+   it:{name:'Pozzo saraceno, detto di Ruggero', period:'età araba e normanna',
+       desc:'Molti pozzi e una fonte d’acqua servivano il grande insediamento cantieristico portuale di Mascali.'},
+   en:{name:'Saracen well, known as Roger’s well', period:'Arab and Norman age',
+       desc:'Many wells and a spring supplied the great harbour shipyard of Mascali.'}},
+  {lat:37.738857, lng:15.194556,
+   it:{name:'Torri di Malogrado', period:'età araba · basamenti visibili',
+       desc:'Due torri gemelle costruite dagli Arabi per sorvegliare il porto e il traffico del legname dell’Etna. Restano visibili i basamenti, che non sono accessibili perché si trovano in terreni privati. Dopo il crollo della parte superiore, i basamenti furono usati con impianti idraulici per portare l’acqua nel pozzo di ciascuna torre.'},
+   en:{name:'Malogrado towers', period:'Arab age · bases still visible',
+       desc:'Twin towers built by the Arabs to watch over the harbour and the traffic of Etna timber. Their bases are still visible but not accessible, as they stand on private land. After the upper part collapsed, the bases were used with hydraulic installations to carry water into the well of each tower.'}},
+  {lat:37.741083, lng:15.204125,
+   it:{name:'Il fiume e la darsena', period:'III–XIX sec. · torrente Macchia',
+       desc:'Il Wadi, il fiume, era porto fluviale: carico del legname dell’Etna e cantiere navale, da cui il nome Dar-Sinah, corrotto in «Tarzanà». Nel Settecento un clima più secco lo trasformò in torrente.'},
+   en:{name:'The river and the dockyard', period:'3rd–19th century · Macchia stream',
+       desc:'The Wadi, the river, was a river port: loading Etna timber and a shipyard, whose name Dar-Sinah became «Tarzanà». In the 18th century a drier climate turned it into a stream.'}},
+  {lat:37.73999, lng:15.20394,
+   it:{name:'Chiesa di Sant’Anna', period:'inizio XIII sec. · età normanno-sveva',
+       desc:'Sulla marina fu costruita una chiesetta-faro: insieme a S. Maria La Strada creava un ponte visivo e di segnali a garanzia dell’approdo. Nel Cinquecento l’ingegnere Spannocchi vi avvistò una torretta.'},
+   en:{name:'Church of Sant’Anna', period:'early 13th century · Norman–Swabian age',
+       desc:'On the shore a lighthouse-chapel was built: together with S. Maria La Strada it created a line of sight and signals guaranteeing the anchorage. In the 16th century the engineer Spannocchi sighted a small tower beside it.'}}
+];
+let mapPorto = null;
+function portoPopup(s, i){
+  const L_ = LANG === 'en' ? 'en' : 'it';
+  return `<b>${i+1}. ${s[L_].name}</b>${s[L_].period}`;
+}
+function renderPorto(){
+  const L_ = LANG === 'en' ? 'en' : 'it';
+  const el = document.getElementById('steps-porto');
+  if (el) el.innerHTML = portoStops.map((s,i) => `
+    <div class="step">
+      ${i < portoStops.length-1 ? '<div class="step-line"></div>' : ''}
+      <div class="step-dot" style="font-weight:700;font-size:14px;">${i+1}</div>
+      <div class="step-body"><b>${s[L_].name}</b><span>${s[L_].period} — ${s[L_].desc}</span></div>
+    </div>`).join('');
+  portoStops.forEach((s,i) => { if (s.marker) s.marker.setPopupContent(portoPopup(s,i)); });
+}
+function initMapPorto(){
+  if (mapPorto || typeof L === 'undefined') return;
+  mapPorto = L.map('map-porto', {zoomControl:true});
+  mapPorto.attributionControl.setPrefix(false);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'}).addTo(mapPorto);
+  const pins = [];
+  portoStops.forEach((s,i) => {
+    if (s.lat === undefined) return;
+    const pts = [[s.lat, s.lng]].concat(s.extra || []);
+    pts.forEach((pt, k) => {
+      const m = L.marker(pt, {icon: L.divIcon({className:'', html:`<div class="mk-stop mk-storia">${i+1}</div>`, iconSize:[24,24], iconAnchor:[12,12]})}).addTo(mapPorto);
+      m.bindPopup(portoPopup(s,i));
+      if (k === 0) s.marker = m;
+      pins.push(pt);
+    });
+  });
+  if (pins.length) mapPorto.fitBounds(pins, {padding:[34,34], maxZoom:15});
+}
+
+// ==========================================
+// PERCORSO STORICO DI GIUSY BONACCORSI (centro antico di Riposto)
+// 4 tappe reali, coordinate fornite da Michele il 31/10/2026.
+// Testo completo sulla pagina Notion collegata; qui solo nome e sequenza.
+// ==========================================
+const giusyStops = [
+  {lat:37.73336191535298, lng:15.204932656875133,
+   it:{name:'Santuario della Sacra Lettera'}, en:{name:'Sanctuary of the Sacra Lettera'}},
+  {lat:37.73211882770131, lng:15.205902042271315,
+   it:{name:'Monumento dei Caduti in Mare'}, en:{name:'Monument to the Fallen at Sea'}},
+  {lat:37.72970251702882, lng:15.206860489479576,
+   it:{name:'Largo Carmine — qui si trovava la Torre la Fuille'}, en:{name:'Largo Carmine — site of the former Torre la Fuille'}},
+  {lat:37.72973788763594, lng:15.207192328738394,
+   it:{name:'Croce di Largo Bagni'}, en:{name:'Cross of Largo Bagni'}},
+];
+const giusyUrl = 'https://titanium-memory-f5d.notion.site/RIPOSTO-39baf2a3c03280898d84f86fc7ea8a7b';
+const giusyLinkTxt = () => LANG === 'en' ? 'Open the historic route (in Italian) →' : 'Scopri il percorso storico →';
+let mapGiusy = null;
+function giusyPopup(s, i){
+  const L_ = LANG === 'en' ? 'en' : 'it';
+  return `<b>${i+1}. ${s[L_].name}</b>Percorso Storico · Giusy Bonaccorsi<br><a href="${giusyUrl}" target="_blank">${giusyLinkTxt()}</a>`;
+}
+function renderGiusy(){
+  const L_ = LANG === 'en' ? 'en' : 'it';
+  const el = document.getElementById('steps-giusy');
+  if (el) el.innerHTML = giusyStops.map((s,i) => `
+    <div class="step">
+      ${i < giusyStops.length-1 ? '<div class="step-line"></div>' : ''}
+      <div class="step-dot" style="font-weight:700;font-size:14px;">${i+1}</div>
+      <div class="step-body"><b>${s[L_].name}</b></div>
+    </div>`).join('');
+  giusyStops.forEach((s,i) => { if (s.marker) s.marker.setPopupContent(giusyPopup(s,i)); });
+}
+function initMapGiusy(){
+  if (mapGiusy || typeof L === 'undefined') return;
+  mapGiusy = L.map('map-giusy', {zoomControl:true});
+  mapGiusy.attributionControl.setPrefix(false);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'}).addTo(mapGiusy);
+  const pts = [];
+  giusyStops.forEach((s,i) => {
+    pts.push([s.lat, s.lng]);
+    const m = L.marker([s.lat, s.lng], {icon: L.divIcon({className:'', html:`<div class="mk-stop mk-storia">${i+1}</div>`, iconSize:[24,24], iconAnchor:[12,12]})}).addTo(mapGiusy);
+    m.bindPopup(giusyPopup(s,i));
+    s.marker = m;
+  });
+  if (pts.length) mapGiusy.fitBounds(pts, {padding:[34,34], maxZoom:16});
+  L.polyline(pts, {color:'#6FA8BF', weight:2.5, opacity:0.8, dashArray:'4,6'}).addTo(mapGiusy);
+}
+
+const list = document.getElementById('specie-list');
+function renderSpecie(){
+  list.innerHTML = specie.map(s => {
+    const en = LANG === 'en' && s.en;
+    const titolo = en ? s.en.name : s.name;
+    const sotto = en ? s.name + ' · ' + s.dial : s.dial;
+    return `
+  <div class="card">
+    <div class="card-top">
+      <div class="card-icon">${s.icon}</div>
+      <div><p class="card-name">${titolo} <span style="font-weight:400;color:var(--grayblue);font-size:13px;">— ${sotto}</span></p><p class="card-meta"><i>${s.sci}</i></p></div>
+    </div>
+    <p class="card-desc">${en ? s.en.desc : s.desc}</p>
+    <a class="card-link" href="${s.url}" target="_blank">${t('card')}</a>
+  </div>`;
+  }).join('');
+}
+
+// link "fish" stops to their scheda url via the specie array
+stops.forEach(s => {
+  if (s.type === 'fish') {
+    const sp = specie.find(x => x.name === s.ref);
+    if (sp) { s.url = sp.url; s.desc = sp.dial + ' — ' + sp.sci; s.icon = sp.icon; if (sp.en) s.nameEn = sp.en.name; }
+  }
+});
+
+const iconFor = {anchor:'⚓', fish:'🐟', storia:'🏛️', evento:'🌊'};
+const classFor = {anchor:'mk-anchor', fish:'mk-fish', storia:'mk-storia', evento:'mk-evento'};
+
+// steps list (compact, used as fallback / accessible list under the map)
+const stepsEl = document.getElementById('steps-list');
+function renderSteps(){
+  stepsEl.innerHTML = stops.map((s,i) => `
+  <div class="step">
+    ${i < stops.length-1 ? '<div class="step-line"></div>' : ''}
+    <div class="step-dot"${s.num ? ' style="font-weight:700;font-size:14px;"' : ''}>${s.num || iconFor[s.type]}</div>
+    <div class="step-body"><b>${s.icon && s.num ? s.icon + ' ' : ''}${nm(s)}</b><span>${[distTxt(s), ds(s)].filter(Boolean).join(' — ')}</span></div>
+  </div>
+`).join('');
+}
+function popupHtml(s){
+  const linkHtml = s.url ? `<a href="${s.url}" target="_blank">${t('card')}</a>` : '';
+  return `<b>${s.num ? s.num + '. ' : ''}${nm(s)}</b>${[ds(s), distTxt(s), linkHtml].filter(Boolean).join('<br>')}`;
+}
+
+// map
+let map;
+function initMap(){
+  if (map || typeof L === 'undefined') return;
+  map = L.map('map', {zoomControl:true});
+  map.attributionControl.setPrefix(false);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'}).addTo(map);
+
+  const bounds = [];
+  stops.forEach(s => {
+    bounds.push([s.lat, s.lng]);
+    const marker = L.marker([s.lat, s.lng], {
+      icon: L.divIcon({
+        className:'',
+        html:`<div class="mk-stop ${classFor[s.type]}">${s.num || iconFor[s.type]}</div>`,
+        iconSize:[24,24], iconAnchor:[12,12]
+      }),
+      zIndexOffset: s.type === 'fish' ? 500 : 0
+    }).addTo(map);
+    s.marker = marker;
+    marker.bindPopup(popupHtml(s));
+  });
+  map.fitBounds(bounds, {padding:[34,34]});
+
+  // linea del percorso
+  L.polyline(track, {color:'#C8813A', weight:2.5, opacity:0.7, dashArray:'1,6'}).addTo(map);
+}
+
+function fmtDist(d){ return d < 1000 ? Math.round(d)+' m' : (d/1000).toFixed(1)+' km'; }
+
+let userMarker;
+function locateMe(){
+  if (!navigator.geolocation){
+    alert(t('noGeo'));
+    return;
+  }
+  const btn = document.getElementById('locate-btn');
+  btn.classList.add('loading'); btn.textContent = t('locating');
+  navigator.geolocation.getCurrentPosition(pos => {
+    try {
+      btn.classList.remove('loading'); btn.textContent = t('locate');
+      const {latitude:lat, longitude:lng} = pos.coords;
+      if (!map) throw new Error('mappa non inizializzata');
+      if (userMarker) map.removeLayer(userMarker);
+      userMarker = L.marker([lat,lng], {icon: L.divIcon({className:'', html:'<div class="user-mk"></div>', iconSize:[16,16], iconAnchor:[8,8]})}).addTo(map);
+      map.setView([lat,lng], 16);
+
+      let nearest = null, nearestD = Infinity;
+      stops.forEach(s => {
+        const d = haversine(lat,lng,s.lat,s.lng);
+        if (d < nearestD){ nearestD = d; nearest = s; }
+      });
+      const box = document.getElementById('nearest-box');
+      if (nearest){
+        box.classList.add('show');
+        box.innerHTML = `${t('nearest')} <b>${nm(nearest)}</b> — ${t('about')} ${fmtDist(nearestD)}`;
+      }
+    } catch(e) {
+      alert(t('showErr') + e.message);
+    }
+  }, err => {
+    btn.classList.remove('loading'); btn.textContent = t('locate');
+    alert(t('geoErr')(err.message));
+  }, {enableHighAccuracy:true, timeout:10000});
+}
+
+
+// --- avviso sonoro all'arrivo a ogni tappa ---
+const RAGGIO_TAPPA = 35;      // metri: distanza entro cui scatta l'avviso
+let watchId = null, audioCtx = null, wakeLock = null, primaPos = true;
+const tappeAvvisate = new Set();
+
+function beep(){
+  try {
+    const t = audioCtx.currentTime;
+    [[880,0],[1175,0.22]].forEach(([f,dt]) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      o.connect(g); g.connect(audioCtx.destination);
+      g.gain.setValueAtTime(0.0001, t+dt);
+      g.gain.exponentialRampToValueAtTime(0.5, t+dt+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+dt+0.2);
+      o.start(t+dt); o.stop(t+dt+0.22);
+    });
+  } catch(e){}
+  try { if (navigator.vibrate) navigator.vibrate([200,100,200]); } catch(e){}
+}
+
+function mostraUtente(lat,lng,centra){
+  if (!map) return;
+  if (userMarker) map.removeLayer(userMarker);
+  userMarker = L.marker([lat,lng], {icon: L.divIcon({className:'', html:'<div class="user-mk"></div>', iconSize:[16,16], iconAnchor:[8,8]}), zIndexOffset:1000}).addTo(map);
+  if (centra) map.setView([lat,lng], 16);
+}
+
+function suPosizione(pos){
+  const {latitude:lat, longitude:lng} = pos.coords;
+  mostraUtente(lat, lng, primaPos); primaPos = false;
+  let nearest = null, nearestD = Infinity;
+  stops.forEach(s => {
+    const d = haversine(lat,lng,s.lat,s.lng);
+    if (d > RAGGIO_TAPPA*3) tappeAvvisate.delete(s.name);   // allontanandosi, la tappa torna "nuova"
+    if (d < nearestD){ nearestD = d; nearest = s; }
+  });
+  const box = document.getElementById('nearest-box');
+  box.classList.add('show');
+  const nome = nearest ? `<b>${nearest.num ? nearest.num + '. ' : ''}${nm(nearest)}</b>` : '';
+  if (nearest && nearestD <= RAGGIO_TAPPA){
+    const link = nearest.url ? ` · <a href="${nearest.url}" target="_blank">${t('openCard')}</a>` : '';
+    box.innerHTML = `${t('atStop')} ${nome}${nearest.type === 'fish' ? ' — ' + (LANG === 'en' ? nearest.name + ' · ' : '') + nearest.desc : ''}${link}`;
+    if (!tappeAvvisate.has(nearest.name)){ tappeAvvisate.add(nearest.name); beep(); }
+  } else if (nearest){
+    box.innerHTML = `${t('nearest')} ${nome} — ${t('about')} ${fmtDist(nearestD)}`;
+  }
+}
+
+async function toggleAvvisi(){
+  const btn = document.getElementById('avvisi-btn');
+  if (watchId !== null){
+    navigator.geolocation.clearWatch(watchId); watchId = null;
+    try { if (wakeLock) { await wakeLock.release(); wakeLock = null; } } catch(e){}
+    btn.classList.remove('on'); btn.textContent = t('alerts');
+    return;
+  }
+  if (!navigator.geolocation){ alert(t('noGeo')); return; }
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+  } catch(e){}
+  beep();   // suono di prova: conferma che l'audio è attivo
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e){}
+  primaPos = true; tappeAvvisate.clear();
+  btn.classList.add('on'); btn.textContent = t('alertsOn');
+  const box = document.getElementById('nearest-box');
+  box.classList.add('show'); box.innerHTML = t('searching');
+  watchId = navigator.geolocation.watchPosition(suPosizione, err => {
+    box.innerHTML = t('geoErr')(err.message);
+  }, {enableHighAccuracy:true, maximumAge:5000, timeout:20000});
+}
+
+// --- sole e luna di oggi sul lungomare ---
+function aggiornaAstro(ora){
+  const el = document.getElementById('astro');
+  if (!el || typeof SunCalc === 'undefined') return;
+  ora = ora || new Date();
+  const LAT = 37.7178, LNG = 15.2160, TZ = 'Europe/Rome';
+  const hm = d => (d && !isNaN(d)) ? d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit', timeZone:TZ}) : '—';
+  // scarto in minuti tra l'ora di Riposto e UTC (ora solare o legale)
+  const offMin = Math.round((new Date(ora.toLocaleString('en-US', {timeZone:TZ})) - new Date(ora.toLocaleString('en-US', {timeZone:'UTC'}))) / 60000);
+  const sole = SunCalc.getTimes(ora, LAT, LNG, 0, offMin);
+  const luna = SunCalc.getMoonTimes(ora, LAT, LNG, offMin);
+  const ill = SunCalc.getMoonIllumination(ora);
+  const f = ill.phase;
+  const fi = f < 0.03 || f > 0.97 ? 0 : f < 0.22 ? 1 : f < 0.28 ? 2 : f < 0.47 ? 3 : f < 0.53 ? 4 : f < 0.72 ? 5 : f < 0.78 ? 6 : 7;
+  const fase = [['🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘'][fi], t('phases')[fi]];
+  el.innerHTML = `
+    <div class="astro-card">
+      <div class="lab">☀️ ${t('sun')}</div>
+      <div class="row"><span>${t('sunrise')}</span><b>${hm(sole.sunrise)}</b></div>
+      <div class="row"><span>${t('sunset')}</span><b>${hm(sole.sunset)}</b></div>
+    </div>
+    <div class="astro-card">
+      <div class="lab">${fase[0]} ${t('moon')}</div>
+      <div class="row"><span>${t('rises')}</span><b>${hm(luna.rise)}</b></div>
+      <div class="row"><span>${t('sets')}</span><b>${hm(luna.set)}</b></div>
+      <div class="fase">${fase[1]} · ${Math.round(ill.fraction*100)}% ${t('lit')}</div>
+    </div>`;
+}
+
+function showTab(name){
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('active', s.id === name));
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelector('.phone').scrollIntoView({behavior:'instant', block:'start'});
+  if (name === 'percorso') {
+    initMap();
+    setTimeout(() => { if (map) map.invalidateSize(); }, 60);
+  }
+  if (name === 'storia') {
+    initMapGiusy();
+    initMapPorto();
+    setTimeout(() => { if (mapGiusy) mapGiusy.invalidateSize(); if (mapPorto) mapPorto.invalidateSize(); }, 60);
+  }
+}
+
+// percorso è la tab attiva di default al caricamento
+initMap();
+
+// --- primo avvio: piccolo aiuto una tantum ---
+function closeTip(){
+  document.getElementById('tip-banner').classList.remove('show');
+  try { localStorage.setItem('mdm_tip_v2', '1'); } catch(e){}
+}
+try {
+  if (!localStorage.getItem('mdm_tip_v2')) {
+    document.getElementById('tip-banner').classList.add('show');
+  }
+} catch(e){}
+
+// --- installazione sulla home ---
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+let deferredInstallPrompt = null;
+
+function dismissInstall(){
+  document.getElementById('install-banner').classList.remove('show');
+  try { localStorage.setItem('mdm_install_dismissed', '1'); } catch(e){}
+}
+function doInstall(){
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => {
+      deferredInstallPrompt = null;
+      dismissInstall();
+    });
+  }
+}
+
+let installDismissed = false;
+try { installDismissed = !!localStorage.getItem('mdm_install_dismissed'); } catch(e){}
+
+if (!isStandalone && !installDismissed) {
+  if (isIOS) {
+    document.getElementById('install-text').textContent = t('installIOS');
+    document.getElementById('install-btn').style.display = 'none';
+    document.getElementById('install-banner').classList.add('show');
+  } else {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById('install-banner').classList.add('show');
+    });
+  }
+}
+
+// --- cambio lingua ---
+function setLang(l){
+  LANG = (l === 'en') ? 'en' : 'it';
+  try { localStorage.setItem('mdm_lang', LANG); } catch(e){}
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-en]').forEach(el => {
+    if (el.dataset.it === undefined) el.dataset.it = el.innerHTML;
+    el.innerHTML = LANG === 'en' ? el.dataset.en : el.dataset.it;
+  });
+  document.getElementById('lang-it').classList.toggle('active', LANG === 'it');
+  document.getElementById('lang-en').classList.toggle('active', LANG === 'en');
+  const lb = document.getElementById('locate-btn'); if (!lb.classList.contains('loading')) lb.textContent = t('locate');
+  document.getElementById('avvisi-btn').textContent = watchId !== null ? t('alertsOn') : t('alerts');
+  document.getElementById('install-text').textContent = isIOS ? t('installIOS') : t('install');
+  document.getElementById('nearest-box').classList.remove('show');
+  renderSpecie(); renderSteps(); renderGiusy(); renderPorto();
+  stops.forEach(s => { if (s.marker) s.marker.setPopupContent(popupHtml(s)); });
+  try { aggiornaAstro(); } catch(e){}
+}
+// lingua iniziale: quella scelta in precedenza, altrimenti italiano solo se il telefono è in italiano
+let linguaIniziale = null;
+try { linguaIniziale = localStorage.getItem('mdm_lang'); } catch(e){}
+if (!linguaIniziale) linguaIniziale = /^it\b/i.test(navigator.language || '') ? 'it' : 'en';
+setLang(linguaIniziale);
+</script>
+
+</body>
+</html>
