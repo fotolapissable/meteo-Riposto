@@ -577,7 +577,7 @@ const RAIN_ISLANDS = [
 ];
 const RAIN_STEP = 0.1;
 const RAIN_ELEV_MIN = 250, RAIN_ELEV_MAX = 2250;
-const RAIN_CACHE_KEY = 'mr_rain_sicilia_v1';
+const RAIN_CACHE_KEY = 'mr_rain_sicilia_v3';
 const RAIN_CACHE_MIN = 30;
 // Scala colori: grigio (secco) → ocra, giallo → verdi (buona umidità) →
 // verde-acqua, blu, viola (piogge molto abbondanti).
@@ -596,6 +596,13 @@ const rainColor = mm => RAIN_CLASSES.find(c=>mm<c.max).col;
 let rainGridLayer=null, rainGridCells=null, rainGridLoading=false, rainGridOn=false, rainGridTs=0;
 let rainPeriod=14, srtLayer=null, rainFirstOpen=true;
 const rainRenderer = L.canvas({ padding:0.3 });
+const RAIN_OPACITY = 0.42; // più trasparente: si vede la mappa sotto
+// Nomi delle località SOPRA la griglia (solo con gli accumuli accesi),
+// così restano leggibili anche dove la cella è colorata.
+map.createPane('labels');
+map.getPane('labels').style.zIndex = 450;
+const labelsLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png?key=cb1_54v5_1_ce6f639e845b860ae79e28d8',
+  { subdomains:'abcd', maxZoom:19, pane:'labels', errorTileUrl:TRANSPARENT_TILE });
 
 function inPoly(lat,lng,poly){
   let inside=false;
@@ -605,12 +612,19 @@ function inPoly(lat,lng,poly){
   }
   return inside;
 }
+function cellTouchesLand(la,lo){
+  const h=RAIN_STEP/2;
+  for(const dy of [-h,0,h]) for(const dx of [-h,0,h]) if(inPoly(la+dy,lo+dx,SICILIA_POLY)) return true;
+  return false;
+}
 function buildRainPoints(){
   const pts=[];
   for(let i=0; 36.65+i*RAIN_STEP<=38.32; i++){
     for(let j=0; 12.35+j*RAIN_STEP<=15.70; j++){
       const la=+(36.65+i*RAIN_STEP).toFixed(2), lo=+(12.35+j*RAIN_STEP).toFixed(2);
-      if(inPoly(la,lo,SICILIA_POLY)) pts.push({lat:la,lng:lo});
+      // la cella entra se QUALSIASI suo punto (centro, angoli, metà lati) è
+      // sulla terraferma: così anche le celle della costa coprono l'isola
+      if(cellTouchesLand(la,lo)) pts.push({lat:la,lng:lo});
     }
   }
   RAIN_ISLANDS.forEach(p=>pts.push({lat:p.lat,lng:p.lng}));
@@ -621,7 +635,7 @@ function rainUrl(pts){
   return `https://api.open-meteo.com/v1/forecast`
     +`?latitude=${pts.map(p=>p.lat).join(',')}&longitude=${pts.map(p=>p.lng).join(',')}`
     +`&daily=precipitation_sum,temperature_2m_mean&hourly=precipitation`
-    +`&past_days=30&forecast_days=1&past_hours=24&forecast_hours=1`
+    +`&past_days=21&forecast_days=1&past_hours=24&forecast_hours=1`
     +`&timezone=Europe%2FRome&timeformat=unixtime&models=best_match,italia_meteo_arpae_icon_2i`;
 }
 async function fetchRainChunk(pts){
@@ -681,34 +695,59 @@ async function loadRainGrid(force){
       }
     }catch(_){}
   }
+  // Mentre si aggiorna, mostra l'ultimo dato salvato (anche se vecchio)
+  if(!rainGridCells){
+    try{
+      const c=JSON.parse(localStorage.getItem(RAIN_CACHE_KEY)||'null');
+      if(c && c.cells && c.cells.length){ rainGridCells=c.cells; rainGridTs=c.ts; renderRainGrid(); }
+    }catch(_){}
+  }
+  // Open-Meteo gratuito ha un limite di richieste al minuto: le zone si
+  // chiedono una alla volta e, se il limite scatta, quelle mancanti si
+  // richiedono da sole dopo un minuto (fino a 3 volte).
   rainGridLoading=true;
-  const pts=buildRainPoints(), CHUNK=90, chunks=[];
-  for(let i=0;i<pts.length;i+=CHUNK) chunks.push(pts.slice(i,i+CHUNK));
-  let done=0, failed=0;
-  const cells=[];
-  status.textContent=`Caricamento accumuli Sicilia… 0/${chunks.length}`;
-  // in sequenza, per restare nei limiti gratuiti di Open-Meteo
-  for(const ch of chunks){
-    try{ const res=await fetchRainChunk(ch); ch.forEach((p,i)=>{ if(res[i]) cells.push(summarizeCell(p,res[i])); }); }
-    catch(e){ failed++; console.warn('[Accumuli]',e); }
-    done++;
-    status.textContent=`Caricamento accumuli Sicilia… ${done}/${chunks.length}`;
-    if(cells.length){ rainGridCells=cells.slice(); renderRainGrid(); }
+  const pts=buildRainPoints(), CHUNK=85;
+  let queue=[]; for(let i=0;i<pts.length;i+=CHUNK) queue.push(pts.slice(i,i+CHUNK));
+  const total=queue.length, byKey=new Map();
+  for(let round=0; round<4 && queue.length; round++){
+    if(round>0){
+      for(let s=60; s>0; s--){
+        status.textContent=`Limite richieste Open-Meteo: riprovo le ${queue.length} zona/e mancanti tra ${s} s…`;
+        await new Promise(r=>setTimeout(r,1000));
+      }
+    }
+    const failedNow=[];
+    let n=total-queue.length;
+    for(const ch of queue){
+      n++;
+      status.textContent=`Caricamento accumuli Sicilia… ${n}/${total}`;
+      try{
+        const res=await fetchRainChunk(ch);
+        ch.forEach((p,i)=>{ if(res[i]) byKey.set(p.lat+','+p.lng, summarizeCell(p,res[i])); });
+        const merged=new Map((rainGridCells||[]).map(c=>[c.lat+','+c.lng,c]));
+        for(const [k,c] of byKey) merged.set(k,c);
+        rainGridCells=[...merged.values()]; renderRainGrid();
+      }catch(e){ failedNow.push(ch); console.warn('[Accumuli]',e); }
+      await new Promise(r=>setTimeout(r,800));
+    }
+    queue=failedNow;
   }
   rainGridLoading=false;
-  if(cells.length){
-    rainGridCells=cells; rainGridTs=Date.now();
-    try{ localStorage.setItem(RAIN_CACHE_KEY, JSON.stringify({ts:rainGridTs, cells})); }catch(_){}
+  if(!queue.length){
+    rainGridCells=[...byKey.values()]; rainGridTs=Date.now();
+    try{ localStorage.setItem(RAIN_CACHE_KEY, JSON.stringify({ts:rainGridTs, cells:rainGridCells})); }catch(_){}
+    renderRainGrid();
+  } else {
+    renderRainGrid();
+    status.innerHTML=`⚠ ${queue.length} zona/e non caricate (Open-Meteo non risponde). <a href="#" onclick="loadRainGrid(true);return false">Riprova</a>`;
   }
-  renderRainGrid();
-  if(failed) status.innerHTML=`⚠ ${failed} zona/e non caricate (Open-Meteo non risponde). <a href="#" onclick="loadRainGrid(true);return false">Riprova</a>`;
 }
 
 function renderRainScale(){
   const box=document.getElementById('fgl-scale');
   box.innerHTML = rainPeriod==='radar'
     ? `<div class="fgl-bar"></div><div class="fgl-barlbl"><span>poca</span><span>molta pioggia</span></div>`
-    : '<div class="fgl-row">'+RAIN_CLASSES.map(c=>`<div class="fgl-item"><div class="fgl-sw" style="background:${c.col}"></div><span>${c.lbl}</span></div>`).join('')+'<span style="font-size:9px;color:var(--text-dim)">mm</span></div>';
+    : '<div class="fgl-strip">'+RAIN_CLASSES.map(c=>`<div class="fgl-seg"><i style="background:${c.col}"></i><span>${c.lbl}</span></div>`).join('')+'</div><div class="fgl-unit">millimetri di pioggia</div>';
 }
 
 function renderRainGrid(){
@@ -729,14 +768,14 @@ function renderRainGrid(){
     if(onlyBosco && (c.elev==null || c.elev<RAIN_ELEV_MIN || c.elev>RAIN_ELEV_MAX)) return;
     const mm=cellAccum(c,rainPeriod);
     const rect=L.rectangle([[c.lat-half,c.lng-half],[c.lat+half,c.lng+half]],
-      {renderer:rainRenderer, color:'#04070e', weight:.4, opacity:.5, fillColor:rainColor(mm), fillOpacity:.62});
+      {renderer:rainRenderer, color:'#04070e', weight:.3, opacity:.35, fillColor:rainColor(mm), fillOpacity:RAIN_OPACITY});
     rect.on('click',()=>{
       const ls=cellLastSignif(c), a=p=>cellAccum(c,p).toFixed(0);
       L.popup().setLatLng([c.lat,c.lng]).setContent(
         `<b>${mm.toFixed(0)} mm</b> · ${perLbl}<br>`+
         `Quota cella ≈ ${c.elev!=null?Math.round(c.elev)+' m':'n/d'} · ${c.lat.toFixed(2)}°N ${c.lng.toFixed(2)}°E<br>`+
-        `24h ${a(1)} · 3gg ${a(3)} · 7gg ${a(7)} · 14gg ${a(14)} · 30gg ${a(30)} mm<br>`+
-        `Ultima pioggia ≥10 mm/giorno: ${ls===null?'oltre 30 gg fa':(ls===0?'oggi':ls+' gg fa')}<br>`+
+        `24h ${a(1)} · 3gg ${a(3)} · 7gg ${a(7)} · 14gg ${a(14)} · 21gg ${a(21)} mm<br>`+
+        `Ultima pioggia ≥10 mm/giorno: ${ls===null?'oltre 21 gg fa':(ls===0?'oggi':ls+' gg fa')}<br>`+
         (c.t7!=null?`Temp. media 7 gg: ${c.t7}°C`:'')
       ).openOn(map);
     });
@@ -779,7 +818,10 @@ function toggleFunghiGrid(force){
   rainGridOn = (typeof force==='boolean') ? force : !rainGridOn;
   document.getElementById('btn-funghi-map').classList.toggle('on', rainGridOn);
   document.getElementById('funghi-grid-legend').classList.toggle('hidden', !rainGridOn);
+  document.getElementById('mapc').classList.toggle('acc-on', rainGridOn);
   if(rainGridOn){
+    setRainInfo(!isMobileLayout());   // su telefono le note partono chiuse
+    if(!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
     if(rainFirstOpen){ rainFirstOpen=false; map.fitBounds([[36.6,12.3],[38.35,15.7]],{padding:[10,10]}); }
     if(rainPeriod==='radar'){ renderRainGrid(); showSrt24(); }
     else if(rainGridCells && Date.now()-rainGridTs < RAIN_CACHE_MIN*60000) renderRainGrid();
@@ -787,9 +829,15 @@ function toggleFunghiGrid(force){
   } else {
     if(rainGridLayer){ map.removeLayer(rainGridLayer); rainGridLayer=null; }
     if(srtLayer){ map.removeLayer(srtLayer); srtLayer=null; }
+    if(map.hasLayer(labelsLayer)) map.removeLayer(labelsLayer);
     map.closePopup();
   }
 }
+function setRainInfo(open){
+  document.getElementById('fgl-more').hidden=!open;
+  document.getElementById('fgl-info').setAttribute('aria-expanded', open);
+}
+function toggleRainInfo(){ setRainInfo(document.getElementById('fgl-more').hidden); }
 // Il link nella sidebar ora funziona anche su telefono (apre la scheda Mappa)
 function openRainMap(){
   const mob=isMobileLayout();
@@ -857,7 +905,7 @@ async function loadFunghi(){
       let body = '';
       if(!cond) body = `<div class="fng-card-note">⚠️ Dati non disponibili per questo bosco.</div>`;
       else {
-        body = `<div class="fng-card-detail">💧 7gg ${cellAccum(cell,7).toFixed(0)} · 14gg ${cond.accum14.toFixed(0)} · 30gg ${cellAccum(cell,30).toFixed(0)} mm · ${cond.giorni!==null ? 'ultima pioggia ≥10mm '+(cond.giorni===0?'oggi':cond.giorni+'g fa') : 'nessuna pioggia ≥10mm in 30gg'}${cell.t7!=null?' · 🌡 media 7gg '+cell.t7+'°C':''}</div>`;
+        body = `<div class="fng-card-detail">💧 7gg ${cellAccum(cell,7).toFixed(0)} · 14gg ${cond.accum14.toFixed(0)} · 21gg ${cellAccum(cell,21).toFixed(0)} mm · ${cond.giorni!==null ? 'ultima pioggia ≥10mm '+(cond.giorni===0?'oggi':cond.giorni+'g fa') : 'nessuna pioggia ≥10mm in 21gg'}${cell.t7!=null?' · 🌡 media 7gg '+cell.t7+'°C':''}</div>`;
         if(!specie.length) body += `<div class="fng-card-note">Nessuna delle specie in elenco a questa quota.</div>`;
         specie.forEach(s => {
           const stato = classificaFungo(s, mese, cond);
@@ -1041,4 +1089,7 @@ refreshRadarFrames();
 fetchWx();
 initBz();
 loadFunghi();
-setTimeout(requestGeolocation, 1000);
+// Indirizzo diretto alla mappa accumuli: …/index.html#accumuli
+// (comodo da salvare nei preferiti o da condividere)
+if(location.hash==='#accumuli') setTimeout(openRainMap, 300);
+else setTimeout(requestGeolocation, 1000);
