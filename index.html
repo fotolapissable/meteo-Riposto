@@ -482,6 +482,15 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 #brand-footer a{color:rgba(200,129,58,0.85);text-decoration:none;transition:color .2s}
 #brand-footer a:hover{color:var(--amber-light)}
 
+/* ── VISTA MOBILE "ESSENZIALE" ──────────────── */
+/* Su desktop questi elementi non esistono visivamente: il bottone mappa e
+   il toggle "altri dettagli" restano nascosti, e #sb-extra usa display:contents
+   così le sue sezioni restano figli diretti flex di #sb (non rompe il
+   margin-top:auto del footer fotolapissable). Tutto si attiva solo sotto 760px. */
+#mob-map-btn{display:none}
+#sb-extra-toggle{display:none}
+#sb-extra{display:contents}
+
 /* ── RESPONSIVE MOBILE ──────────────────────── */
 @media (max-width: 760px){
   #hdr{padding:0 10px}
@@ -523,6 +532,38 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   .mbtn{padding:5px 7px;font-size:9px}
   #pbbar{bottom:calc(8px + 18px + env(safe-area-inset-bottom,0));right:8px}
   #rts{bottom:calc(8px + 18px + env(safe-area-inset-bottom,0));left:8px;font-size:9px;max-width:calc(100% - 190px)}
+
+  /* Vista essenziale: pochi numeri + bottone mappa, il resto dietro un tap */
+  #mob-map-btn{
+    display:block;width:100%;margin-bottom:10px;padding:13px;
+    font-family:var(--font-h);font-size:12px;font-weight:700;letter-spacing:2px;
+    text-align:center;background:var(--amber-dim);border:1px solid var(--border-bright);
+    color:var(--amber);border-radius:4px;cursor:pointer;
+  }
+  /* Condizioni Attuali: solo Temperatura, Vento, Precipitazioni (celle 2,4,5,6,8 via) */
+  .wgrid .wcell:nth-child(2),
+  .wgrid .wcell:nth-child(4),
+  .wgrid .wcell:nth-child(5),
+  .wgrid .wcell:nth-child(6),
+  .wgrid .wcell:nth-child(8){display:none}
+  .wgrid{grid-template-columns:1fr 1fr 1fr}
+  /* Vento esteso (bussola, alba/tramonto, golden hour) nascosto finché
+     non si apre "Altri dettagli": niente spostato nel DOM, solo legato
+     allo stesso stato del toggle tramite una classe sul body */
+  body:not(.extra-open) .cdir,
+  body:not(.extra-open) #sundata,
+  body:not(.extra-open) #goldenhour{display:none}
+  /* Fulminazione: tieni il numero in evidenza, il log solo scorrevole e limitato */
+  .llog{max-height:85px;overflow-y:auto}
+
+  #sb-extra-toggle{
+    display:block;width:100%;margin:2px 0 8px;padding:8px;
+    background:none;border:1px solid var(--border);border-radius:3px;
+    color:var(--text-mid);font-family:var(--font-d);font-size:10px;
+    letter-spacing:1px;text-align:center;cursor:pointer;
+  }
+  #sb-extra{display:none}
+  #sb-extra.open{display:block}
 }
 
 /* Telefono in landscape fisso (larghezza "mobile" ma altezza molto ridotta):
@@ -595,6 +636,9 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
   <!-- ═══════════════ SIDEBAR ═══════════════ -->
   <div id="sb">
 
+    <!-- APRI MAPPA (solo mobile: vista essenziale, dettagli dietro un tap) -->
+    <button id="mob-map-btn" onclick="switchTab('mappa')">🗺️ APRI MAPPA A SCHERMO INTERO</button>
+
     <!-- CONDIZIONI ATTUALI -->
     <div class="sec">
       <div class="slabel">Condizioni Attuali</div>
@@ -648,6 +692,10 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
       <a href="https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita/" target="_blank" rel="noopener" class="sb-link" style="font-size:9.5px;text-align:center">📋 Bollettino ufficiale Protezione Civile →</a>
     </div>
 
+    <!-- Su telefono il resto parte ripiegato: essenziali subito, dettagli a un tap -->
+    <button id="sb-extra-toggle" onclick="toggleSbExtra()">▾ Altri dettagli (vento, previsioni, funghi)</button>
+    <div id="sb-extra">
+
     <!-- PREVISIONE 2 GIORNI -->
     <div class="sec">
       <div class="slabel">📅 Domani e dopodomani</div>
@@ -679,6 +727,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
         <a href="https://www.behance.net/fotolapissable" target="_blank" rel="noopener" class="sb-link">🎨 Portfolio Behance</a>
       </div>
     </div>
+
+    </div><!-- /sb-extra -->
 
   </div><!-- /sidebar -->
 
@@ -748,6 +798,16 @@ function toggleFunghiCollapse(){
   var collapsed = panel.classList.toggle('collapsed');
   btn.setAttribute('aria-expanded', String(!collapsed));
   btn.textContent = collapsed ? '⌄' : '⌃';
+}
+
+// Vista mobile essenziale: mostra/nasconde vento esteso, fulmini (log),
+// previsioni 2gg, funghi e link fotolapissable, tutti raggruppati in #sb-extra
+function toggleSbExtra(){
+  var el = document.getElementById('sb-extra');
+  var btn = document.getElementById('sb-extra-toggle');
+  var open = el.classList.toggle('open');
+  document.body.classList.toggle('extra-open', open);
+  btn.textContent = open ? '▴ Nascondi dettagli' : '▾ Altri dettagli (vento, previsioni, funghi)';
 }
 </script>
 <script src="app.js"></script>
