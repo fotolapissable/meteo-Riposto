@@ -133,7 +133,13 @@ map.getPane('base').style.zIndex = 150;
 const TRANSPARENT_TILE='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
 // Basemap CARTO Voyager (il tile server OSM risponde 403 ai siti di terzi)
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_54v5_1_ce6f639e845b860ae79e28d8',{
+// Quando la griglia accumuli è attiva, passiamo a "light_nolabels": niente
+// aree colorate (parchi/acqua/edifici) che si sommano ai colori della
+// griglia, così strade e sfondo restano leggibili sotto l'overlay semi-
+// trasparente. Le etichette restano quelle del layer "labels" già esistente.
+const BASEMAP_NORMAL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=cb1_54v5_1_ce6f639e845b860ae79e28d8';
+const BASEMAP_SOTTOACCUMULI = 'https://{s}.basemaps.cartocdn.com/rastertiles/light_nolabels/{z}/{x}/{y}{r}.png?key=cb1_54v5_1_ce6f639e845b860ae79e28d8';
+const baseLayer = L.tileLayer(BASEMAP_NORMAL,{
   attribution:'©<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a> · Radar: <a href="https://radar.protezionecivile.it/">Protezione Civile</a> · Meteo: <a href="https://open-meteo.com/">Open-Meteo</a>',
   subdomains:'abcd',maxZoom:19,pane:'base',errorTileUrl:TRANSPARENT_TILE
 }).addTo(map);
@@ -596,7 +602,7 @@ const rainColor = mm => RAIN_CLASSES.find(c=>mm<c.max).col;
 let rainGridLayer=null, rainGridCells=null, rainGridLoading=false, rainGridOn=false, rainGridTs=0;
 let rainPeriod=14, srtLayer=null, rainFirstOpen=true;
 const rainRenderer = L.canvas({ padding:0.3 });
-const RAIN_OPACITY = 0.42; // più trasparente: si vede la mappa sotto
+const RAIN_OPACITY = 0.33; // più trasparente: si vede la mappa sotto (ridotta da 0.42: con celle adiacenti su tutta l'isola, a 0.42 la mappa sotto era quasi invisibile ovunque, non solo sui nomi delle località)
 // Nomi delle località SOPRA la griglia (solo con gli accumuli accesi),
 // così restano leggibili anche dove la cella è colorata.
 map.createPane('labels');
@@ -822,6 +828,7 @@ function toggleFunghiGrid(force){
   if(rainGridOn){
     setRainInfo(!isMobileLayout());   // su telefono le note partono chiuse
     if(!map.hasLayer(labelsLayer)) labelsLayer.addTo(map);
+    baseLayer.setUrl(BASEMAP_SOTTOACCUMULI); // basemap neutra: più contrasto sotto la griglia
     if(rainFirstOpen){ rainFirstOpen=false; map.fitBounds([[36.6,12.3],[38.35,15.7]],{padding:[10,10]}); }
     if(rainPeriod==='radar'){ renderRainGrid(); showSrt24(); }
     else if(rainGridCells && Date.now()-rainGridTs < RAIN_CACHE_MIN*60000) renderRainGrid();
@@ -830,6 +837,7 @@ function toggleFunghiGrid(force){
     if(rainGridLayer){ map.removeLayer(rainGridLayer); rainGridLayer=null; }
     if(srtLayer){ map.removeLayer(srtLayer); srtLayer=null; }
     if(map.hasLayer(labelsLayer)) map.removeLayer(labelsLayer);
+    baseLayer.setUrl(BASEMAP_NORMAL); // torna alla basemap colorata normale
     map.closePopup();
   }
 }
